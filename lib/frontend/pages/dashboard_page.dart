@@ -4,54 +4,28 @@ import '../widgets/recent_transactions_list.dart';
 import '../widgets/quick_actions_grid.dart';
 import '../../core/utils/responsive_utils.dart';
 
-class HomePage extends StatefulWidget {
+class DashboardPage extends StatefulWidget {
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(context),
-      body: _buildResponsiveBody(context),
-      floatingActionButton: _buildFAB(context),
-    );
+    return _buildResponsiveBody();
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text('Gestione Spese'),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            // TODO: Mostra notifiche
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          onPressed: () {
-            // TODO: Vai alle impostazioni
-          },
-        ),
-        if (ResponsiveUtils.isDesktop(context))
-          const SizedBox(width: 8),
-      ],
-    );
-  }
-
-  Widget _buildResponsiveBody(BuildContext context) {
+  Widget _buildResponsiveBody() {
     if (ResponsiveUtils.isMobile(context)) {
-      return _buildMobileLayout(context);
+      return _buildMobileLayout();
     } else if (ResponsiveUtils.isTablet(context)) {
-      return _buildTabletLayout(context);
+      return _buildTabletLayout();
     } else {
-      return _buildDesktopLayout(context);
+      return _buildDesktopLayout();
     }
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout() {
     return SingleChildScrollView(
       padding: ResponsiveUtils.getPagePadding(context),
       child: Column(
@@ -61,7 +35,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
           QuickActionsGrid(),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
-          _buildSectionTitle(context, 'Transazioni Recenti'),
+          _buildSectionTitle('Transazioni Recenti'),
           const SizedBox(height: 12),
           RecentTransactionsList(),
         ],
@@ -69,7 +43,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTabletLayout(BuildContext context) {
+  Widget _buildTabletLayout() {
     return SingleChildScrollView(
       padding: ResponsiveUtils.getPagePadding(context),
       child: Column(
@@ -90,7 +64,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
-          _buildSectionTitle(context, 'Transazioni Recenti'),
+          _buildSectionTitle('Transazioni Recenti'),
           const SizedBox(height: 12),
           RecentTransactionsList(),
         ],
@@ -98,13 +72,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDesktopLayout(BuildContext context) {
+  Widget _buildDesktopLayout() {
     return Padding(
       padding: ResponsiveUtils.getPagePadding(context),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Colonna sinistra - Riepilogo e Azioni Rapide con scroll
+          // Colonna sinistra - Riepilogo e Azioni Rapide
           Expanded(
             flex: 1,
             child: SingleChildScrollView(
@@ -125,7 +99,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle(context, 'Transazioni Recenti'),
+                _buildSectionTitle('Transazioni Recenti'),
                 const SizedBox(height: 16),
                 Expanded(
                   child: SingleChildScrollView(
@@ -140,7 +114,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
+  Widget _buildSectionTitle(String title) {
     return Text(
       title,
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -148,25 +122,5 @@ class _HomePageState extends State<HomePage> {
         fontSize: ResponsiveUtils.isMobile(context) ? 20 : 24,
       ),
     );
-  }
-
-  Widget _buildFAB(BuildContext context) {
-    if (ResponsiveUtils.isMobile(context)) {
-      return FloatingActionButton(
-        onPressed: () {
-          // TODO: Aggiungi nuova spesa
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Nuova Spesa',
-      );
-    } else {
-      return FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Aggiungi nuova spesa
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Nuova Spesa'),
-      );
-    }
   }
 }

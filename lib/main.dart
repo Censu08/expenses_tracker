@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'frontend/pages/auth_page.dart';
-import 'frontend/pages/home_page.dart';
+import 'frontend/layouts/main_layout.dart';
 import 'frontend/themes/app_theme.dart';
 import 'backend/blocs/user_bloc.dart';
 
@@ -30,7 +30,7 @@ class ExpensesTrackerApp extends StatelessWidget {
         home: BlocBuilder<UserBloc, UserState>(
           builder: (context, state) {
             if (state is UserAuthenticated) {
-              return HomePage();
+              return MainLayout();
             } else {
               return AuthPage();
             }

@@ -4,7 +4,7 @@ import '../../backend/blocs/user_bloc.dart';
 import '../../core/utils/responsive_utils.dart';
 import '../widgets/auth_form_widget.dart';
 import '../themes/app_theme.dart';
-import 'home_page.dart';
+import '../layouts/main_layout.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -20,7 +20,7 @@ class _AuthPageState extends State<AuthPage> {
             state is UserLoginSuccess ||
             state is UserRegistrationSuccess) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomePage()),
+            MaterialPageRoute(builder: (context) => MainLayout()),
           );
         } else if (state is UserError) {
           ScaffoldMessenger.of(context).showSnackBar(

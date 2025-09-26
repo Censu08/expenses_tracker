@@ -253,6 +253,8 @@ class _AuthFormWidgetState extends State<AuthFormWidget> {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
+      textInputAction: TextInputAction.done,
+      onFieldSubmitted: (_) => _handleSubmit(),
       decoration: InputDecoration(
         labelText: 'Password',
         prefixIcon: const Icon(Icons.lock),
