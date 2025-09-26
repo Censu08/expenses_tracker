@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/utils/responsive_utils.dart';
 
 class IncomePage extends StatefulWidget {
+  const IncomePage({super.key});
+
   @override
   State<IncomePage> createState() => _IncomePageState();
 }
