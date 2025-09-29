@@ -454,7 +454,12 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       if (_userController.isUserAuthenticated) {
         final user = await _userController.getCurrentUser();
         if (user != null) {
-          emit(UserAuthenticated(user: user));
+          // ✅ Verifica se il profilo è completo
+          if (!user.profileComplete) {
+            emit(UserRequiresBirthdateState(user: user));
+          } else {
+            emit(UserAuthenticated(user: user));
+          }
         } else {
           emit(const UserUnauthenticated());
         }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';  // ✅ AGGIUNGI QUESTO IMPORT
 import 'firebase_options.dart';
 import 'frontend/pages/auth_page.dart';
 import 'frontend/layouts/main_layout.dart';
+import 'frontend/pages/complete_birthdate_page.dart';
 import 'frontend/themes/app_theme.dart';
 import 'backend/blocs/blocs.dart';
 import 'core/providers/bloc_providers.dart';
@@ -18,7 +20,7 @@ Future<void> main() async {
   );
   await dotenv.load(fileName: ".env");
 
-  runApp(ExpensesTrackerApp());
+  runApp(const ExpensesTrackerApp());
 }
 
 class ExpensesTrackerApp extends StatelessWidget {
@@ -32,6 +34,14 @@ class ExpensesTrackerApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('it', 'IT'),
+        ],
         home: BlocBuilder<UserBloc, UserState>(
           builder: (context, state) {
             // Mostra loading durante il controllo dell'autenticazione
@@ -50,13 +60,18 @@ class ExpensesTrackerApp extends StatelessWidget {
               );
             }
 
+            // Se l'utente richiede il completamento della data di nascita
+            if (state is UserRequiresBirthdateState) {
+              return CompleteBirthdatePage(user: state.user);
+            }
+
             // Se l'utente è autenticato, mostra il layout principale
             if (state is UserAuthenticated) {
               return const AppHome();
             }
 
             // Altrimenti mostra la pagina di autenticazione
-            return AuthPage();
+            return const AuthPage();
           },
         ),
         debugShowCheckedModeBanner: false,
