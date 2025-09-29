@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 enum RecurrenceType {
@@ -71,9 +72,13 @@ class RecurrenceSettings extends Equatable {
   factory RecurrenceSettings.fromJson(Map<String, dynamic> json) {
     return RecurrenceSettings(
       type: RecurrenceType.fromString(json['type'] as String),
-      startDate: DateTime.parse(json['start_date'] as String),
+      startDate: json['start_date'] is Timestamp
+          ? (json['start_date'] as Timestamp).toDate()
+          : DateTime.parse(json['start_date'] as String),
       endDate: json['end_date'] != null
-          ? DateTime.parse(json['end_date'] as String)
+          ? (json['end_date'] is Timestamp
+          ? (json['end_date'] as Timestamp).toDate()
+          : DateTime.parse(json['end_date'] as String))
           : null,
       necessityLevel: NecessityLevel.fromString(json['necessity_level'] as String),
       customIntervalDays: json['custom_interval_days'] as int?,
@@ -83,8 +88,8 @@ class RecurrenceSettings extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'type': type.value,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate?.toIso8601String(),
+      'start_date': Timestamp.fromDate(startDate),
+      'end_date': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'necessity_level': necessityLevel.value,
       'custom_interval_days': customIntervalDays,
     };

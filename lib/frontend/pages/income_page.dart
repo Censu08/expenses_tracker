@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/utils/responsive_utils.dart';
+import '../../core/providers/bloc_providers.dart';
+import '../../backend/blocs/blocs.dart';
+import '../../backend/models/models.dart';
+import '../widgets/bloc_state_widgets.dart';
+import '../widgets/add_income_form.dart';
+import '../widgets/income_details_dialog.dart';
 
 class IncomePage extends StatefulWidget {
   const IncomePage({super.key});
@@ -17,10 +24,91 @@ class _IncomePageState extends State<IncomePage> {
     'Quest\'Anno',
   ];
 
+  bool _hasInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      _loadIncomeData();
+    }
+  }
+
+  void _loadIncomeData() {
+    final userId = context.currentUserId;
+    if (userId != null) {
+      final (startDate, endDate) = _getDateRangeForPeriod(_selectedPeriod);
+
+      // Carica categorie entrate
+      context.categoryBloc.add(LoadAllUserCategoriesEvent(
+        userId: userId,
+        isIncome: true,
+      ));
+
+      // Carica entrate per periodo
+      context.incomeBloc.add(LoadUserIncomesEvent(
+        userId: userId,
+        startDate: startDate,
+        endDate: endDate,
+      ));
+
+      // Carica statistiche per categoria
+      context.incomeBloc.add(LoadIncomeStatsByCategoryEvent(
+        userId: userId,
+        startDate: startDate,
+        endDate: endDate,
+      ));
+
+      // Carica riepilogo mensile corrente
+      context.incomeBloc.add(LoadCurrentMonthSummaryEvent(
+        userId: userId,
+      ));
+    }
+  }
+
+  (DateTime, DateTime) _getDateRangeForPeriod(String period) {
+    final now = DateTime.now();
+    switch (period) {
+      case 'Questa Settimana':
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        return (
+        DateTime(weekStart.year, weekStart.month, weekStart.day),
+        DateTime(now.year, now.month, now.day, 23, 59, 59)
+        );
+      case 'Questo Mese':
+        return (
+        DateTime(now.year, now.month, 1),
+        DateTime(now.year, now.month + 1, 0, 23, 59, 59)
+        );
+      case 'Ultimi 3 Mesi':
+        return (
+        DateTime(now.year, now.month - 3, 1),
+        DateTime(now.year, now.month + 1, 0, 23, 59, 59)
+        );
+      case 'Quest\'Anno':
+        return (
+        DateTime(now.year, 1, 1),
+        DateTime(now.year, 12, 31, 23, 59, 59)
+        );
+      default:
+        return (
+        DateTime(now.year, now.month, 1),
+        DateTime(now.year, now.month + 1, 0, 23, 59, 59)
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _buildResponsiveBody(),
+      body: RefreshableWidget(
+        onRefresh: () async {
+          _loadIncomeData();
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: _buildResponsiveBody(),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddIncomeDialog,
         icon: const Icon(Icons.add),
@@ -155,6 +243,7 @@ class _IncomePageState extends State<IncomePage> {
                 onChanged: (value) {
                   if (value != null) {
                     setState(() => _selectedPeriod = value);
+                    _loadIncomeData(); // Ricarica i dati per il nuovo periodo
                   }
                 },
               ),
@@ -166,241 +255,424 @@ class _IncomePageState extends State<IncomePage> {
   }
 
   Widget _buildIncomeSummaryCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.trending_up,
-                  color: Colors.green,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Entrate Totali',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+    return BlocBuilder<IncomeBloc, IncomeState>(
+      builder: (context, state) {
+        if (state is IncomeLoading) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(child: CircularProgressIndicator()),
             ),
-            const SizedBox(height: 16),
-            Text(
-              '€ 3.250,00',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          );
+        }
+
+        if (state is IncomeError) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
                 children: [
-                  Icon(
-                    Icons.arrow_upward,
-                    color: Colors.green,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
+                  const Icon(Icons.error, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
                   Text(
-                    '+12.5% vs mese scorso',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
+                    'Errore nel caricamento',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.message,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        double totalAmount = 0.0;
+        double previousPeriodAmount = 0.0;
+        double growthPercentage = 0.0;
+
+        if (state is CurrentMonthSummaryLoaded) {
+          final summary = state.summary;
+          totalAmount = summary['total']?.toDouble() ?? 0.0;
+          previousPeriodAmount = summary['previous_month_total']?.toDouble() ?? 0.0;
+
+          if (previousPeriodAmount > 0) {
+            growthPercentage = ((totalAmount - previousPeriodAmount) / previousPeriodAmount) * 100;
+          }
+        } else if (state is UserIncomesLoaded) {
+          totalAmount = state.incomes.fold(0.0, (sum, income) => sum + income.amount);
+        }
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.trending_up,
+                      color: Colors.green,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Entrate Totali',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '€ ${totalAmount.toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (growthPercentage != 0.0) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: growthPercentage >= 0
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          growthPercentage >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: growthPercentage >= 0 ? Colors.green : Colors.red,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${growthPercentage >= 0 ? '+' : ''}${growthPercentage.toStringAsFixed(1)}% vs periodo precedente',
+                          style: TextStyle(
+                            color: growthPercentage >= 0 ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildIncomeBreakdownCard() {
-    final incomeCategories = [
-      IncomeCategory('Stipendio', 2500.00, Colors.blue, 0.77),
-      IncomeCategory('Freelance', 500.00, Colors.purple, 0.15),
-      IncomeCategory('Investimenti', 150.00, Colors.orange, 0.05),
-      IncomeCategory('Altro', 100.00, Colors.grey, 0.03),
-    ];
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Suddivisione per Categoria',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+    return BlocBuilder<IncomeBloc, IncomeState>(
+      builder: (context, state) {
+        if (state is IncomeLoading) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(child: CircularProgressIndicator()),
             ),
-            const SizedBox(height: 20),
-            ...incomeCategories.map((category) => _buildCategoryItem(category)),
-          ],
-        ),
-      ),
-    );
-  }
+          );
+        }
 
-  Widget _buildCategoryItem(IncomeCategory category) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: category.color,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    category.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                '€ ${category.amount.toStringAsFixed(2)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: category.percentage,
-            backgroundColor: category.color.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(category.color),
-          ),
-        ],
-      ),
-    );
-  }
+        Map<String, double> categoryStats = {};
+        double totalAmount = 0.0;
 
-  Widget _buildRecentIncomeCard() {
-    final recentIncomes = [
-      IncomeTransaction(
-        'Stipendio Dicembre',
-        'Stipendio',
-        2500.00,
-        DateTime.now().subtract(const Duration(days: 1)),
-        Icons.account_balance,
-        Colors.blue,
-      ),
-      IncomeTransaction(
-        'Progetto Website',
-        'Freelance',
-        350.00,
-        DateTime.now().subtract(const Duration(days: 3)),
-        Icons.web,
-        Colors.purple,
-      ),
-      IncomeTransaction(
-        'Dividendi Azioni',
-        'Investimenti',
-        75.00,
-        DateTime.now().subtract(const Duration(days: 5)),
-        Icons.trending_up,
-        Colors.orange,
-      ),
-      IncomeTransaction(
-        'Vendita Usato',
-        'Altro',
-        50.00,
-        DateTime.now().subtract(const Duration(days: 7)),
-        Icons.sell,
-        Colors.grey,
-      ),
-    ];
+        if (state is IncomeStatsByCategoryLoaded) {
+          categoryStats = state.stats;
+          totalAmount = categoryStats.values.fold(0.0, (sum, amount) => sum + amount);
+        } else if (state is UserIncomesLoaded) {
+          // Calcola statistiche dalle entrate caricate
+          for (final income in state.incomes) {
+            final categoryId = income.category.id;
+            categoryStats[categoryId] = (categoryStats[categoryId] ?? 0.0) + income.amount;
+          }
+          totalAmount = categoryStats.values.fold(0.0, (sum, amount) => sum + amount);
+        }
 
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
+        return Card(
+          child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Entrate Recenti',
+                  'Suddivisione per Categoria',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Vedi Tutte'),
-                ),
+                const SizedBox(height: 20),
+                if (categoryStats.isEmpty)
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.pie_chart_outline,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Nessuna entrata nel periodo selezionato',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ...categoryStats.entries.map((entry) {
+                    final percentage = totalAmount > 0 ? entry.value / totalAmount : 0.0;
+                    return _buildCategoryItem(
+                      entry.key,
+                      entry.value,
+                      percentage,
+                    );
+                  }).toList(),
               ],
             ),
           ),
-          Expanded(
-            child: ListView.separated(
-              itemCount: recentIncomes.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final income = recentIncomes[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryItem(String categoryId, double amount, double percentage) {
+    return BlocBuilder<CategoryBloc, CategoryState>(
+      builder: (context, categoryState) {
+        // Trova la categoria per ID
+        CategoryModel? category;
+        if (categoryState is AllUserCategoriesLoaded) {
+          category = categoryState.categories.firstWhere(
+                (cat) => cat.id == categoryId,
+            orElse: () => CategoryModel.getDefaultIncomeCategories().first, // Fallback
+          );
+        }
+
+        final categoryName = category?.description ?? 'Sconosciuta';
+        final categoryColor = category?.color ?? Colors.grey;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: categoryColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        categoryName,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  leading: CircleAvatar(
-                    backgroundColor: income.color.withOpacity(0.1),
-                    child: Icon(income.icon, color: income.color),
-                  ),
-                  title: Text(
-                    income.title,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    '${income.category} • ${_formatDate(income.date)}',
-                  ),
-                  trailing: Text(
-                    '+€ ${income.amount.toStringAsFixed(2)}',
-                    style: TextStyle(
+                  Text(
+                    '€ ${amount.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                      fontSize: 16,
                     ),
                   ),
-                  onTap: () {
-                    // TODO: Mostra dettagli entrata
+                ],
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: percentage,
+                backgroundColor: categoryColor.withOpacity(0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentIncomeCard() {
+    return BlocBuilder<IncomeBloc, IncomeState>(
+      builder: (context, state) {
+        List<IncomeModel> recentIncomes = [];
+
+        if (state is UserIncomesLoaded) {
+          // Prendi le più recenti
+          recentIncomes = List.from(state.incomes)
+            ..sort((a, b) => b.incomeDate.compareTo(a.incomeDate))
+            ..take(10).toList();
+        }
+
+        return Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Entrate Recenti',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _showAllIncomes(),
+                      child: const Text('Vedi Tutte'),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: state is IncomeLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : recentIncomes.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.receipt_long,
+                        size: 48,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nessuna entrata trovata',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Aggiungi la tua prima entrata',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                    : ListView.separated(
+                  itemCount: recentIncomes.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final income = recentIncomes[index];
+                    return _buildIncomeListTile(income);
                   },
-                );
-              },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildIncomeListTile(IncomeModel income) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 8,
+      ),
+      leading: CircleAvatar(
+        backgroundColor: income.category.color.withOpacity(0.1),
+        child: Icon(income.category.icon, color: income.category.color),
+      ),
+      title: Text(
+        income.description,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${income.category.description} • ${_formatDate(income.incomeDate)}'),
+          if (income.isRecurring)
+            Row(
+              children: [
+                Icon(
+                  Icons.repeat,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Ricorrente',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
+        ],
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '+€ ${income.amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+              fontSize: 16,
+            ),
+          ),
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 18),
+                    SizedBox(width: 8),
+                    Text('Modifica'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 18, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Elimina', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) => _handleIncomeAction(value as String, income),
           ),
         ],
       ),
+      onTap: () => _showIncomeDetails(income),
     );
   }
 
@@ -422,43 +694,100 @@ class _IncomePageState extends State<IncomePage> {
   void _showAddIncomeDialog() {
     showDialog(
       context: context,
+      builder: (context) => AddIncomeForm(
+        onIncomeAdded: () {
+          Navigator.pop(context);
+          _loadIncomeData(); // Ricarica i dati
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Entrata aggiunta con successo!')),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showIncomeDetails(IncomeModel income) {
+    showDialog(
+      context: context,
+      builder: (context) => IncomeDetailsDialog(
+        income: income,
+        onUpdated: () => _loadIncomeData(),
+      ),
+    );
+  }
+
+  void _handleIncomeAction(String action, IncomeModel income) {
+    final userId = context.currentUserId;
+    if (userId == null) return;
+
+    switch (action) {
+      case 'edit':
+        _showEditIncomeDialog(income);
+        break;
+      case 'delete':
+        _showDeleteConfirmation(income);
+        break;
+    }
+  }
+
+  void _showEditIncomeDialog(IncomeModel income) {
+    showDialog(
+      context: context,
+      builder: (context) => AddIncomeForm(
+        initialIncome: income,
+        onIncomeAdded: () {
+          Navigator.pop(context);
+          _loadIncomeData();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Entrata modificata con successo!')),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(IncomeModel income) {
+    showDialog(
+      context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Nuova Entrata'),
-        content: const Text('Funzionalità in arrivo!'),
+        title: const Text('Conferma Eliminazione'),
+        content: Text('Vuoi davvero eliminare l\'entrata "${income.description}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: const Text('Annulla'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteIncome(income);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Elimina'),
           ),
         ],
       ),
     );
   }
-}
 
-class IncomeCategory {
-  final String name;
-  final double amount;
-  final Color color;
-  final double percentage;
+  void _deleteIncome(IncomeModel income) {
+    final userId = context.currentUserId;
+    if (userId == null) return;
 
-  IncomeCategory(this.name, this.amount, this.color, this.percentage);
-}
+    context.incomeBloc.add(DeleteIncomeEvent(
+      userId: userId,
+      incomeId: income.id,
+    ));
 
-class IncomeTransaction {
-  final String title;
-  final String category;
-  final double amount;
-  final DateTime date;
-  final IconData icon;
-  final Color color;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Entrata eliminata')),
+    );
+  }
 
-  IncomeTransaction(
-      this.title,
-      this.category,
-      this.amount,
-      this.date,
-      this.icon,
-      this.color,
-      );
+  void _showAllIncomes() {
+    // TODO: Naviga alla pagina con tutte le entrate
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Funzionalità in sviluppo')),
+    );
+  }
 }
