@@ -121,37 +121,41 @@ class TransactionController {
   // DASHBOARD E ANALISI FINANZIARIE
   // ==============================================================================
 
-  /// Ottieni dati completi per la dashboard
+  /// Ottieni dati completi per la dashboard (OTTIMIZZATO - una sola query)
   Future<Map<String, dynamic>> getDashboardData(String userId, {double? monthlyBudget}) async {
     try {
       _validateUserId(userId);
+
+      debugPrint('📊 [Dashboard] Inizio caricamento dati per utente: $userId');
 
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
       final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
       final startOfYear = DateTime(now.year, 1, 1);
 
-      // Dati del mese corrente
+      // ✅ UNA SOLA chiamata per ottenere bilancio mensile e annuale
       final monthlyBalance = await getNetBalanceForPeriod(
         userId,
         startDate: startOfMonth,
         endDate: endOfMonth,
       );
+      debugPrint('✅ [Dashboard] Bilancio mensile: €${monthlyBalance['net_balance']?.toStringAsFixed(2)}');
 
-      // Dati dell'anno corrente
       final yearlyBalance = await getNetBalanceForPeriod(
         userId,
         startDate: startOfYear,
         endDate: now,
       );
+      debugPrint('✅ [Dashboard] Bilancio annuale: €${yearlyBalance['net_balance']?.toStringAsFixed(2)}');
 
-      // Transazioni recenti
+      // Transazioni recenti (limite 10 per dashboard)
       final recentTransactions = await getAllTransactions(
         userId,
         startDate: startOfMonth,
         endDate: now,
         limit: 10,
       );
+      debugPrint('✅ [Dashboard] ${recentTransactions.length} transazioni recenti recuperate');
 
       // Statistiche per categoria del mese corrente
       final categoryStats = await getCategoryStatsComplete(
@@ -159,15 +163,20 @@ class TransactionController {
         startDate: startOfMonth,
         endDate: endOfMonth,
       );
+      debugPrint('✅ [Dashboard] Statistiche per ${categoryStats.length} categorie');
 
       // Budget status se fornito
       Map<String, double>? budgetStatus;
       if (monthlyBudget != null && monthlyBudget > 0) {
         budgetStatus = await _expenseRepository.getCurrentMonthBudgetStatus(userId, monthlyBudget);
+        debugPrint('✅ [Dashboard] Budget status: ${budgetStatus['percentage']?.toStringAsFixed(1)}%');
       }
 
-      // Trend degli ultimi 6 mesi
-      final monthlyTrends = await _getMonthlyTrends(userId, 6);
+      // Formatta transazioni per la dashboard
+      final formattedTransactions = recentTransactions
+          .take(10)
+          .map((t) => _formatTransactionForDashboard(t))
+          .toList();
 
       final dashboardData = {
         'user_id': userId,
@@ -177,9 +186,8 @@ class TransactionController {
           'yearly_balance': yearlyBalance,
           'budget_status': budgetStatus,
         },
-        'recent_transactions': recentTransactions.take(10).map((t) => _formatTransactionForDashboard(t)).toList(),
+        'recent_transactions': formattedTransactions,
         'category_analysis': categoryStats,
-        'trends': monthlyTrends,
         'summary_cards': {
           'total_income_month': monthlyBalance['incomes'],
           'total_expense_month': monthlyBalance['expenses'],
@@ -192,10 +200,10 @@ class TransactionController {
         },
       };
 
-      debugPrint('Dati dashboard generati per utente: $userId');
+      debugPrint('✅ [Dashboard] Dati completati con successo');
       return dashboardData;
     } catch (e) {
-      debugPrint('Errore nella generazione dati dashboard: $e');
+      debugPrint('❌ [Dashboard] Errore nella generazione dati: $e');
       rethrow;
     }
   }
@@ -562,32 +570,6 @@ class TransactionController {
     return trends.reversed.toList(); // Ordine cronologico
   }
 
-  Map<String, dynamic> _formatTransactionForDashboard(dynamic transaction) {
-    if (transaction is IncomeModel) {
-      return {
-        'id': transaction.id,
-        'type': 'income',
-        'amount': transaction.amount,
-        'description': transaction.description,
-        'category': transaction.category.description,
-        'date': transaction.incomeDate,
-        'is_recurring': transaction.isRecurring,
-      };
-    } else if (transaction is ExpenseModel) {
-      return {
-        'id': transaction.id,
-        'type': 'expense',
-        'amount': transaction.amount,
-        'description': transaction.description,
-        'category': transaction.category.description,
-        'date': transaction.expenseDate,
-        'is_recurring': transaction.isRecurring,
-        'is_high_priority': transaction.isHighPriority,
-      };
-    }
-    return {};
-  }
-
   Map<String, double> _calculatePeriodTotals(Map<String, Map<String, double>> stats) {
     double totalIncomes = 0;
     double totalExpenses = 0;
@@ -602,6 +584,39 @@ class TransactionController {
       'expenses': totalExpenses,
       'net': totalIncomes - totalExpenses,
     };
+  }
+
+  /// Formatta una transazione (IncomeModel o ExpenseModel) per la dashboard
+  Map<String, dynamic> _formatTransactionForDashboard(dynamic transaction) {
+    if (transaction is IncomeModel) {
+      return {
+        'id': transaction.id,
+        'type': 'income',
+        'amount': transaction.amount,
+        'description': transaction.description,
+        'category': transaction.category.description,  // ✅ Solo String
+        'category_id': transaction.category.id,        // ✅ ID per riferimento
+        'category_icon': transaction.category.id,      // ✅ Usa ID come identificatore icona
+        'date': transaction.incomeDate,
+        'is_recurring': transaction.isRecurring,
+        'user_id': transaction.userId,
+      };
+    } else if (transaction is ExpenseModel) {
+      return {
+        'id': transaction.id,
+        'type': 'expense',
+        'amount': transaction.amount,
+        'description': transaction.description,
+        'category': transaction.category.description,  // ✅ Solo String
+        'category_id': transaction.category.id,        // ✅ ID per riferimento
+        'category_icon': transaction.category.id,      // ✅ Usa ID come identificatore icona
+        'date': transaction.expenseDate,
+        'is_recurring': transaction.isRecurring,
+        'user_id': transaction.userId,
+      };
+    } else {
+      throw Exception('Tipo di transazione non riconosciuto: ${transaction.runtimeType}');
+    }
   }
 
   // ==============================================================================
