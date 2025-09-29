@@ -108,6 +108,19 @@ class GoogleSignInEvent extends UserEvent {
   const GoogleSignInEvent();
 }
 
+class CompleteBirthdateEvent extends UserEvent {
+  final String userId;
+  final DateTime birthdate;
+
+  const CompleteBirthdateEvent({
+    required this.userId,
+    required this.birthdate,
+  });
+
+  @override
+  List<Object?> get props => [userId, birthdate];
+}
+
 // STATI
 abstract class UserState extends Equatable {
   const UserState();
@@ -189,6 +202,15 @@ class AccountDeleteSuccess extends UserState {
   const AccountDeleteSuccess();
 }
 
+class UserRequiresBirthdateState extends UserState {
+  final UserModel user;
+
+  const UserRequiresBirthdateState({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
+
 // BLOC
 class UserBloc extends Bloc<UserEvent, UserState> {
   final UserController _userController;
@@ -200,6 +222,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     on<RegisterUserEvent>(_onRegisterUser);
     on<LoginUserEvent>(_onLoginUser);
     on<GoogleSignInEvent>(_onGoogleSignIn);
+    on<CompleteBirthdateEvent>(_onCompleteBirthdate);
     on<LogoutUserEvent>(_onLogoutUser);
     on<LoadCurrentUserEvent>(_onLoadCurrentUser);
     on<UpdateUserProfileEvent>(_onUpdateUserProfile);
@@ -261,8 +284,33 @@ class UserBloc extends Bloc<UserEvent, UserState> {
 
     try {
       final user = await _userController.signInWithGoogle();
-      emit(UserLoginSuccess(user: user));
-      emit(UserAuthenticated(user: user));
+
+      // Verifica se il profilo è completo
+      if (!user.profileComplete) {
+        emit(UserRequiresBirthdateState(user: user));
+      } else {
+        emit(UserLoginSuccess(user: user));
+        emit(UserAuthenticated(user: user));
+      }
+    } catch (e) {
+      emit(UserError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onCompleteBirthdate(
+      CompleteBirthdateEvent event,
+      Emitter<UserState> emit,
+      ) async {
+    emit(const UserLoading());
+
+    try {
+      final updatedUser = await _userController.completeBirthdate(
+        userId: event.userId,
+        birthdate: event.birthdate,
+      );
+
+      emit(UserLoginSuccess(user: updatedUser));
+      emit(UserAuthenticated(user: updatedUser));
     } catch (e) {
       emit(UserError(message: e.toString()));
     }

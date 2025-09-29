@@ -1,18 +1,37 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 
 class UserRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  late final GoogleSignIn _googleSignIn;
 
   UserRepository({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
   }) : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+        _firestore = firestore ?? FirebaseFirestore.instance {
+    // AGGIUNGI QUESTO BLOCCO NEL COSTRUTTORE
+    final clientId = dotenv.env['GOOGLE_CLIENT_ID'];
+
+    if (clientId == null || clientId.isEmpty) {
+      throw Exception(
+          'GOOGLE_CLIENT_ID non trovato nel file .env. '
+              'Assicurati di aver creato il file .env e di aver aggiunto la chiave GOOGLE_CLIENT_ID'
+      );
+    }
+
+    _googleSignIn = GoogleSignIn(
+      clientId: clientId,
+      scopes: [
+        'email',
+        'profile',
+      ],
+    );
+  }
 
   // Registrazione nuovo utente
   Future<UserModel> registerUser({
@@ -131,7 +150,7 @@ class UserRepository {
         await _updateUserInDatabase(updatedUser);
         return updatedUser;
       } else {
-        // Nuovo utente - crea il profilo
+        // Nuovo utente - crea il profilo INCOMPLETO
         final names = (firebaseUser.displayName ?? '').split(' ');
         final firstName = names.isNotEmpty ? names.first : '';
         final lastName = names.length > 1 ? names.sublist(1).join(' ') : '';
@@ -141,11 +160,12 @@ class UserRepository {
           id: firebaseUser.uid,
           name: firstName.isNotEmpty ? firstName : 'Nome',
           surname: lastName.isNotEmpty ? lastName : 'Cognome',
-          birthdate: DateTime.now(),
+          birthdate: null,  // NON impostare la data di nascita
           email: firebaseUser.email ?? '',
           createdAt: now,
           active: true,
           lastModified: now,
+          profileComplete: false,  // Profilo NON completo
         );
 
         await _saveUserToDatabase(newUser);
@@ -295,6 +315,30 @@ class UserRepository {
       throw _handleAuthException(e);
     } catch (e) {
       throw Exception('Errore nell\'eliminazione dell\'account: $e');
+    }
+  }
+
+  // Completa il profilo dopo Google Sign-In
+  Future<UserModel> completeBirthdate({
+    required String userId,
+    required DateTime birthdate,
+  }) async {
+    try {
+      final currentUser = await getUserById(userId);
+      if (currentUser == null) {
+        throw Exception('Utente non trovato');
+      }
+
+      final updatedUser = currentUser.copyWith(
+        birthdate: birthdate,
+        profileComplete: true,
+        lastModified: DateTime.now(),
+      );
+
+      await _updateUserInDatabase(updatedUser);
+      return updatedUser;
+    } catch (e) {
+      throw Exception('Errore nel completamento del profilo: $e');
     }
   }
 

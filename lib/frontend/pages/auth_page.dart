@@ -5,8 +5,11 @@ import '../../core/utils/responsive_utils.dart';
 import '../widgets/auth_form_widget.dart';
 import '../themes/app_theme.dart';
 import '../layouts/main_layout.dart';
+import 'complete_birthdate_page.dart';  // AGGIUNGI QUESTO IMPORT
 
 class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});  // Aggiungi super.key
+
   @override
   State<AuthPage> createState() => _AuthPageState();
 }
@@ -16,7 +19,14 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     return BlocListener<UserBloc, UserState>(
       listener: (context, state) {
-        if (state is UserAuthenticated ||
+        // AGGIUNGI QUESTO CASE PER IL COMPLETAMENTO DATA DI NASCITA
+        if (state is UserRequiresBirthdateState) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => CompleteBirthdatePage(user: state.user),
+            ),
+          );
+        } else if (state is UserAuthenticated ||
             state is UserLoginSuccess ||
             state is UserRegistrationSuccess) {
           Navigator.of(context).pushReplacement(
@@ -75,7 +85,7 @@ class _AuthPageState extends State<AuthPage> {
             children: [
               _buildHeader(context),
               SizedBox(height: ResponsiveUtils.getSpacing(context)),
-              AuthFormWidget(),
+              AuthFormWidget(),  // Aggiungi const
             ],
           ),
         ),

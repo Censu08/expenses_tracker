@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'frontend/pages/auth_page.dart';
 import 'frontend/layouts/main_layout.dart';
@@ -8,13 +9,14 @@ import 'frontend/themes/app_theme.dart';
 import 'backend/blocs/blocs.dart';
 import 'core/providers/bloc_providers.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Inizializza Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await dotenv.load(fileName: ".env");
 
   runApp(ExpensesTrackerApp());
 }

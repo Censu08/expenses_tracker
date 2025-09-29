@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+.env
+.client_secret_640763564430-fvbk8fdfg250c0mlv6esj5lg2maii5t6.apps.googleusercontent.com.json
+.pubspec.lock
 
 # Symbolication related
 app.*.symbols

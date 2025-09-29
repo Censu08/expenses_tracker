@@ -78,6 +78,37 @@ class UserController {
     }
   }
 
+  // Completa la data di nascita dopo Google Sign-In
+  Future<UserModel> completeBirthdate({
+    required String userId,
+    required DateTime birthdate,
+  }) async {
+    try {
+      // Validazione data di nascita
+      final now = DateTime.now();
+      final minAge = now.subtract(const Duration(days: 365 * 13)); // 13 anni
+      final maxAge = now.subtract(const Duration(days: 365 * 120)); // 120 anni
+
+      if (birthdate.isAfter(minAge)) {
+        throw const ValidationException('Devi avere almeno 13 anni per registrarti');
+      }
+      if (birthdate.isBefore(maxAge)) {
+        throw const ValidationException('Data di nascita non valida');
+      }
+
+      final updatedUser = await _userRepository.completeBirthdate(
+        userId: userId,
+        birthdate: birthdate,
+      );
+
+      debugPrint('Data di nascita completata per utente: $userId');
+      return updatedUser;
+    } catch (e) {
+      debugPrint('Errore nel completamento data di nascita: $e');
+      rethrow;
+    }
+  }
+
   // Logout utente
   Future<void> logoutUser() async {
     try {
