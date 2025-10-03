@@ -5,8 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/category_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
 import '../../../../backend/models/category_model.dart';
-import '../../../../backend/models/income_model.dart';
+import '../../../../backend/models/income/income_model.dart';
+import '../../../../backend/models/income/income_source_enum.dart';
 import '../../../../backend/models/recurrence_model.dart';
+import 'income_source_selector.dart';
 
 
 class AddIncomeForm extends StatefulWidget {
@@ -38,6 +40,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   bool _isLoading = false;
   List<CategoryModel> _categories = [];
   bool _hasInitialized = false;
+  IncomeSource? _selectedSource;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
       _descriptionController.text = income.description;
       _selectedDate = income.incomeDate;
       _isRecurring = income.isRecurring;
+      _selectedSource = income.source;
 
       if (income.recurrenceSettings != null) {
         _recurrenceType = income.recurrenceSettings!.type;
@@ -128,7 +132,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                       const SizedBox(height: 16),
                       _buildDescriptionField(),
                       const SizedBox(height: 16),
-                      _buildCategorySelector(),
+                      _buildSourceSelector(),
                       const SizedBox(height: 16),
                       _buildDateSelector(),
                       const SizedBox(height: 24),
@@ -220,86 +224,6 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
           return 'La descrizione deve essere di almeno 3 caratteri';
         }
         return null;
-      },
-    );
-  }
-
-  Widget _buildCategorySelector() {
-    return BlocBuilder<CategoryBloc, CategoryState>(
-      builder: (context, state) {
-        if (state is CategoryLoading) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        if (state is AllUserCategoriesLoaded) {
-          // Rimuovi duplicati usando l'ID come chiave univoca
-          _categories = _getUniqueCategoriesById(state.categories);
-
-          // Se abbiamo un initialIncome, trova la categoria corrispondente nella lista
-          if (widget.initialIncome != null && _selectedCategory == null) {
-            _selectedCategory = _findCategoryById(
-              widget.initialIncome!.category.id,
-              _categories,
-            );
-          }
-        }
-
-        if (_categories.isEmpty) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const Icon(Icons.category_outlined, size: 48),
-                  const SizedBox(height: 8),
-                  const Text('Nessuna categoria disponibile'),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _loadCategories,
-                    child: const Text('Ricarica'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        return DropdownButtonFormField<CategoryModel>(
-          decoration: InputDecoration(
-            labelText: 'Categoria',
-            prefixIcon: const Icon(Icons.category),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          value: _selectedCategory,
-          items: _categories.map((category) {
-            return DropdownMenuItem<CategoryModel>(
-              value: category,
-              child: Row(
-                children: [
-                  Icon(category.icon, color: category.color, size: 20),
-                  const SizedBox(width: 8),
-                  Text(category.description),
-                ],
-              ),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() => _selectedCategory = value);
-          },
-          validator: (value) {
-            if (value == null) {
-              return 'Seleziona una categoria';
-            }
-            return null;
-          },
-        );
       },
     );
   }
@@ -441,6 +365,17 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     );
   }
 
+  Widget _buildSourceSelector() {
+    return IncomeSourceSelector(
+      selectedSource: _selectedSource,
+      onChanged: (source) {
+        setState(() {
+          _selectedSource = source;
+        });
+      },
+    );
+  }
+
   Widget _buildActionButtons() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -518,6 +453,14 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
       return;
     }
 
+    // ⬅️ NUOVA VALIDAZIONE SOURCE
+    if (_selectedSource == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Seleziona una fonte di reddito')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -547,6 +490,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
           description: description,
           categoryId: _selectedCategory!.id,
           incomeDate: _selectedDate,
+          source: _selectedSource!, // ⬅️ AGGIUNGERE QUESTO
           isRecurring: _isRecurring,
           recurrenceSettings: recurrenceSettings,
         ));
@@ -559,6 +503,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
           description: description,
           categoryId: _selectedCategory!.id,
           incomeDate: _selectedDate,
+          source: _selectedSource!, // ⬅️ AGGIUNGERE QUESTO
           isRecurring: _isRecurring,
           recurrenceSettings: recurrenceSettings,
         ));

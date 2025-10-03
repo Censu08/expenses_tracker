@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../controllers/transaction_controller.dart';
-import '../models/income_model.dart';
+import '../models/income/income_model.dart';
 import '../models/expense_model.dart';
 import '../../core/errors/app_exceptions.dart';
 

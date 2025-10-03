@@ -3,7 +3,7 @@ import '../repositories/transaction_repository.dart';
 import '../repositories/income_repository.dart';
 import '../repositories/expense_repository.dart';
 import '../repositories/category_repository.dart';
-import '../models/income_model.dart';
+import '../models/income/income_model.dart';
 import '../models/expense_model.dart';
 import '../models/category_model.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -594,9 +594,6 @@ class TransactionController {
         'type': 'income',
         'amount': transaction.amount,
         'description': transaction.description,
-        'category': transaction.category.description,  // ✅ Solo String
-        'category_id': transaction.category.id,        // ✅ ID per riferimento
-        'category_icon': transaction.category.id,      // ✅ Usa ID come identificatore icona
         'date': transaction.incomeDate,
         'is_recurring': transaction.isRecurring,
         'user_id': transaction.userId,

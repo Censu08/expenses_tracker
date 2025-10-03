@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/income_model.dart';
 import '../models/category_model.dart';
-import '../models/recurrence_model.dart';
+import '../models/income/income_model.dart';
+import '../models/income/income_source_enum.dart';
+import '../models/recurrence_model.dart'; // ⬅️ NUOVO IMPORT
 import '../../core/utils/id_generator.dart';
 
 class IncomeRepository {
@@ -26,8 +27,8 @@ class IncomeRepository {
     required String userId,
     required double amount,
     required String description,
-    required CategoryModel category,
     required DateTime incomeDate,
+    required IncomeSource source, // ⬅️ NUOVO PARAMETRO
     bool isRecurring = false,
     RecurrenceSettings? recurrenceSettings,
   }) async {
@@ -39,12 +40,12 @@ class IncomeRepository {
         id: incomeId,
         amount: amount,
         description: description,
-        category: category,
         createdAt: now,
         incomeDate: incomeDate,
         isRecurring: isRecurring,
         recurrenceSettings: recurrenceSettings,
         userId: userId,
+        source: source, // ⬅️ NUOVO CAMPO
       );
 
       await _getUserIncomesRef(userId)
@@ -133,6 +134,7 @@ class IncomeRepository {
     DateTime? incomeDate,
     bool? isRecurring,
     RecurrenceSettings? recurrenceSettings,
+    IncomeSource? source, // ⬅️ NUOVO PARAMETRO
   }) async {
     try {
       final existingIncome = await getIncomeById(userId, incomeId);
@@ -143,10 +145,10 @@ class IncomeRepository {
       final updatedIncome = existingIncome.copyWith(
         amount: amount ?? existingIncome.amount,
         description: description ?? existingIncome.description,
-        category: category ?? existingIncome.category,
         incomeDate: incomeDate ?? existingIncome.incomeDate,
         isRecurring: isRecurring ?? existingIncome.isRecurring,
         recurrenceSettings: recurrenceSettings ?? existingIncome.recurrenceSettings,
+        source: source ?? existingIncome.source, // ⬅️ NUOVO CAMPO
       );
 
       await _getUserIncomesRef(userId)
@@ -175,7 +177,90 @@ class IncomeRepository {
     }
   }
 
-  // QUERY SPECIFICHE
+  // ⬅️ NUOVE QUERY PER SOURCE
+
+  /// Ottieni entrate filtrate per fonte
+  Future<List<IncomeModel>> getIncomesBySource(
+      String userId,
+      IncomeSource source, {
+        DateTime? startDate,
+        DateTime? endDate,
+      }) async {
+    try {
+      Query query = _getUserIncomesRef(userId)
+          .where('source', isEqualTo: source.toJson());
+
+      if (startDate != null) {
+        query = query.where('income_date',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+      }
+
+      if (endDate != null) {
+        query = query.where('income_date',
+            isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+      }
+
+      query = query.orderBy('income_date', descending: true);
+
+      final snapshot = await query.get();
+
+      return snapshot.docs
+          .map((doc) => IncomeModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Errore nel recupero entrate per fonte: $e');
+    }
+  }
+
+  /// Ottieni statistiche aggregate per fonte
+  Future<Map<IncomeSource, double>> getIncomeStatsBySource(
+      String userId, {
+        DateTime? startDate,
+        DateTime? endDate,
+      }) async {
+    try {
+      // Recupera tutte le entrate per il periodo
+      final incomes = await getUserIncomes(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // Aggrega per fonte
+      final Map<IncomeSource, double> stats = {};
+
+      for (final income in incomes) {
+        stats[income.source] = (stats[income.source] ?? 0.0) + income.amount;
+      }
+
+      return stats;
+    } catch (e) {
+      throw Exception('Errore nel calcolo statistiche per fonte: $e');
+    }
+  }
+
+  /// Ottieni totale entrate per una specifica fonte
+  Future<double> getTotalIncomeBySource(
+      String userId,
+      IncomeSource source, {
+        DateTime? startDate,
+        DateTime? endDate,
+      }) async {
+    try {
+      final incomes = await getIncomesBySource(
+        userId,
+        source,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      return incomes.fold<double>(0.0, (sum, income) => sum + income.amount);
+    } catch (e) {
+      throw Exception('Errore nel calcolo totale per fonte: $e');
+    }
+  }
+
+  // QUERY SPECIFICHE (ESISTENTI - mantenute invariate)
 
   /// Ottieni entrate del mese corrente
   Future<List<IncomeModel>> getCurrentMonthIncomes(String userId) async {
@@ -228,9 +313,9 @@ class IncomeRepository {
     );
   }
 
-  // STATISTICHE E ANALYTICS
+  // STATISTICHE
 
-  /// Calcola il totale delle entrate per un periodo
+  /// Ottieni totale entrate per un periodo
   Future<double> getTotalIncomeForPeriod(String userId, {
     required DateTime startDate,
     required DateTime endDate,
@@ -242,13 +327,13 @@ class IncomeRepository {
         endDate: endDate,
       );
 
-      return incomes.fold<double>(0.0, (total, income) => total + income.amount);
+      return incomes.fold<double>(0.0, (sum, income) => sum + income.amount);
     } catch (e) {
-      throw Exception('Errore nel calcolo del totale entrate: $e');
+      throw Exception('Errore nel calcolo del totale: $e');
     }
   }
 
-  /// Ottieni statistiche entrate per categoria
+  /// Ottieni statistiche per categoria
   Future<Map<String, double>> getIncomeStatsByCategory(String userId, {
     DateTime? startDate,
     DateTime? endDate,
@@ -260,12 +345,7 @@ class IncomeRepository {
         endDate: endDate,
       );
 
-      final stats = <String, double>{};
-
-      for (final income in incomes) {
-        final categoryId = income.category.id;
-        stats[categoryId] = (stats[categoryId] ?? 0.0) + income.amount;
-      }
+      final Map<String, double> stats = {};
 
       return stats;
     } catch (e) {
@@ -273,40 +353,48 @@ class IncomeRepository {
     }
   }
 
-  /// Ottieni la media delle entrate mensili
+  /// Ottieni media mensile delle entrate
   Future<double> getMonthlyIncomeAverage(String userId, {int monthsCount = 12}) async {
     try {
-      final endDate = DateTime.now();
-      final startDate = DateTime(endDate.year, endDate.month - monthsCount, endDate.day);
+      final now = DateTime.now();
+      final startDate = DateTime(now.year, now.month - monthsCount, 1);
+      final endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
-      final totalIncome = await getTotalIncomeForPeriod(userId, startDate: startDate, endDate: endDate);
+      final total = await getTotalIncomeForPeriod(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
 
-      return totalIncome / monthsCount;
+      return total / monthsCount;
     } catch (e) {
       throw Exception('Errore nel calcolo della media mensile: $e');
     }
   }
 
-  // GESTIONE RICORRENZE
+  // RICORRENZE
 
-  /// Genera le prossime entrate ricorrenti
+  /// Genera le prossime istanze delle entrate ricorrenti
   Future<List<IncomeModel>> generateRecurringIncomes(String userId) async {
     try {
-      final recurringIncomes = await getActiveRecurringIncomes(userId);
-      final newIncomes = <IncomeModel>[];
+      final activeRecurring = await getActiveRecurringIncomes(userId);
+      final List<IncomeModel> newIncomes = [];
 
-      for (final income in recurringIncomes) {
-        final nextIncome = income.createNextRecurrence();
-        if (nextIncome != null) {
-          // Verifica se esiste già un'entrata per quella data
-          final existingIncome = await _checkIfRecurrenceExists(userId, income.id, nextIncome.incomeDate);
+      for (final recurringIncome in activeRecurring) {
+        final nextDate = recurringIncome.nextOccurrence;
 
-          if (!existingIncome) {
-            await _getUserIncomesRef(userId)
-                .doc(nextIncome.id)
-                .set(nextIncome.toJson());
-            newIncomes.add(nextIncome);
-          }
+        if (nextDate != null && nextDate.isBefore(DateTime.now().add(const Duration(days: 30)))) {
+          // Crea nuova istanza
+          final newIncome = await createIncome(
+            userId: userId,
+            amount: recurringIncome.amount,
+            description: recurringIncome.description,
+            incomeDate: nextDate,
+            source: recurringIncome.source, // ⬅️ Preserva source
+            isRecurring: false, // La nuova istanza non è ricorrente
+          );
+
+          newIncomes.add(newIncome);
         }
       }
 
@@ -316,32 +404,43 @@ class IncomeRepository {
     }
   }
 
-  /// Verifica se esiste già un'entrata ricorrente per una data specifica
-  Future<bool> _checkIfRecurrenceExists(String userId, String originalIncomeId, DateTime date) async {
+  // DUPLICAZIONE
+
+  /// Duplica un'entrata esistente
+  Future<IncomeModel> duplicateIncome(
+      String userId,
+      String incomeId, {
+        DateTime? newDate,
+        double? newAmount,
+      }) async {
     try {
-      final startOfDay = DateTime(date.year, date.month, date.day);
-      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      final originalIncome = await getIncomeById(userId, incomeId);
+      if (originalIncome == null) {
+        throw Exception('Entrata originale non trovata');
+      }
 
-      final query = await _getUserIncomesRef(userId)
-          .where('income_date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('income_date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-          .where('is_recurring', isEqualTo: true)
-          .get();
-
-      return query.docs.isNotEmpty;
+      return await createIncome(
+        userId: userId,
+        amount: newAmount ?? originalIncome.amount,
+        description: originalIncome.description,
+        incomeDate: newDate ?? DateTime.now(),
+        source: originalIncome.source, // ⬅️ Preserva source
+        isRecurring: false,
+      );
     } catch (e) {
-      return false;
+      throw Exception('Errore nella duplicazione dell\'entrata: $e');
     }
   }
 
-  // STREAM E REAL-TIME UPDATES
+  // STREAMS
 
   /// Stream delle entrate dell'utente
-  Stream<List<IncomeModel>> getUserIncomesStream(String userId, {
-    int? limit,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) {
+  Stream<List<IncomeModel>> getUserIncomesStream(
+      String userId, {
+        int? limit,
+        DateTime? startDate,
+        DateTime? endDate,
+      }) {
     Query query = _getUserIncomesRef(userId);
 
     if (startDate != null) {

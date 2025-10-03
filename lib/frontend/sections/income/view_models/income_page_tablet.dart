@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../functions/income_page_functions.dart';
 import '../pages/income_page.dart';
+import '../widgets/income_source_filter.dart';
 import '../widgets/income_summary_card.dart';
 import '../widgets/income_breakdown_card.dart';
 import '../widgets/recent_income_card.dart';
@@ -22,6 +24,16 @@ class IncomePageTablet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PeriodSelector(pageState: pageState),
+          SizedBox(height: ResponsiveUtils.getSpacing(context)),
+          IncomeSourceFilter(
+            selectedSource: pageState.selectedSource,
+            onSourceSelected: (source) {
+              pageState.setState(() {
+                pageState.selectedSource = source;
+              });
+              IncomePageFunctions.loadIncomeData(context, pageState);
+            },
+          ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,

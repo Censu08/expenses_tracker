@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../backend/models/income_model.dart';
+import '../../../../backend/models/income/income_model.dart';
+import '../../../../backend/models/income/income_source_enum.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/bloc_state_widgets.dart';
 import '../view_models/income_page_mobile.dart';
@@ -17,6 +18,7 @@ class IncomePage extends StatefulWidget {
 class IncomePageState extends State<IncomePage> {
   // State variables
   String selectedPeriod = 'Quest\'Anno';
+  IncomeSource? selectedSource;
   final List<String> periods = [
     'Questa Settimana',
     'Questo Mese',

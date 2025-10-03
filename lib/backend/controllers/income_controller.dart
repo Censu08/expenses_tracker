@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
+import '../models/income/income_model.dart';
+import '../models/income/income_source_enum.dart';
 import '../repositories/income_repository.dart';
 import '../repositories/category_repository.dart';
-import '../models/income_model.dart';
 import '../models/category_model.dart';
 import '../models/recurrence_model.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -27,6 +28,7 @@ class IncomeController {
     required String description,
     required String categoryId,
     required DateTime incomeDate,
+    required IncomeSource source, // ⬅️ NUOVO PARAMETRO
     bool isRecurring = false,
     RecurrenceSettings? recurrenceSettings,
   }) async {
@@ -36,6 +38,7 @@ class IncomeController {
       _validateAmount(amount);
       _validateDescription(description);
       _validateDate(incomeDate);
+      _validateSource(source); // ⬅️ NUOVA VALIDAZIONE
       _validateRecurrenceData(isRecurring, recurrenceSettings);
 
       // Recupera la categoria
@@ -48,13 +51,13 @@ class IncomeController {
         userId: userId,
         amount: amount,
         description: description.trim(),
-        category: category,
         incomeDate: incomeDate,
+        source: source, // ⬅️ NUOVO CAMPO
         isRecurring: isRecurring,
         recurrenceSettings: recurrenceSettings,
       );
 
-      debugPrint('Entrata creata con successo: ${income.id}');
+      debugPrint('Entrata creata con successo: ${income.id} (source: ${income.source.displayName})');
       return income;
     } catch (e) {
       debugPrint('Errore nella creazione entrata: $e');
@@ -121,6 +124,7 @@ class IncomeController {
     DateTime? incomeDate,
     bool? isRecurring,
     RecurrenceSettings? recurrenceSettings,
+    IncomeSource? source, // ⬅️ NUOVO PARAMETRO
   }) async {
     try {
       _validateUserId(userId);
@@ -129,6 +133,7 @@ class IncomeController {
       if (amount != null) _validateAmount(amount);
       if (description != null) _validateDescription(description);
       if (incomeDate != null) _validateDate(incomeDate);
+      if (source != null) _validateSource(source); // ⬅️ NUOVA VALIDAZIONE
       if (isRecurring != null) _validateRecurrenceData(isRecurring, recurrenceSettings);
 
       // Recupera la categoria se specificata
@@ -149,9 +154,10 @@ class IncomeController {
         incomeDate: incomeDate,
         isRecurring: isRecurring,
         recurrenceSettings: recurrenceSettings,
+        source: source, // ⬅️ NUOVO CAMPO
       );
 
-      debugPrint('Entrata aggiornata: $incomeId');
+      debugPrint('Entrata aggiornata: ${updatedIncome.id}');
       return updatedIncome;
     } catch (e) {
       debugPrint('Errore nell\'aggiornamento entrata: $e');
@@ -173,8 +179,136 @@ class IncomeController {
     }
   }
 
+  /// Duplica un'entrata esistente
+  Future<IncomeModel> duplicateIncome(
+      String userId,
+      String incomeId, {
+        DateTime? newDate,
+        double? newAmount,
+      }) async {
+    try {
+      _validateUserId(userId);
+      _validateIncomeId(incomeId);
+
+      if (newAmount != null) _validateAmount(newAmount);
+      if (newDate != null) _validateDate(newDate);
+
+      final duplicatedIncome = await _incomeRepository.duplicateIncome(
+        userId,
+        incomeId,
+        newDate: newDate,
+        newAmount: newAmount,
+      );
+
+      debugPrint('Entrata duplicata: ${duplicatedIncome.id}');
+      return duplicatedIncome;
+    } catch (e) {
+      debugPrint('Errore nella duplicazione entrata: $e');
+      rethrow;
+    }
+  }
+
   // ==============================================================================
-  // QUERY SPECIALIZZATE
+  // ⬅️ NUOVE OPERAZIONI PER SOURCE
+  // ==============================================================================
+
+  /// Ottieni entrate filtrate per fonte
+  Future<List<IncomeModel>> getIncomesBySource(
+      String userId,
+      IncomeSource source, {
+        DateTime? startDate,
+        DateTime? endDate,
+      }) async {
+    try {
+      _validateUserId(userId);
+      _validateSource(source);
+      _validateDateRange(startDate, endDate);
+
+      final incomes = await _incomeRepository.getIncomesBySource(
+        userId,
+        source,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      debugPrint('Recuperate ${incomes.length} entrate con fonte: ${source.displayName}');
+      return incomes;
+    } catch (e) {
+      debugPrint('Errore nel recupero entrate per fonte: $e');
+      rethrow;
+    }
+  }
+
+  /// Ottieni statistiche aggregate per fonte
+  Future<Map<IncomeSource, double>> getIncomeStatsBySource(
+      String userId, {
+        DateTime? startDate,
+        DateTime? endDate,
+      }) async {
+    try {
+      _validateUserId(userId);
+      _validateDateRange(startDate, endDate);
+
+      final stats = await _incomeRepository.getIncomeStatsBySource(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      debugPrint('Statistiche per fonte calcolate: ${stats.length} fonti trovate');
+      return stats;
+    } catch (e) {
+      debugPrint('Errore nel calcolo statistiche per fonte: $e');
+      rethrow;
+    }
+  }
+
+  /// Ottieni totale entrate per una specifica fonte
+  Future<double> getTotalIncomeBySource(
+      String userId,
+      IncomeSource source, {
+        DateTime? startDate,
+        DateTime? endDate,
+      }) async {
+    try {
+      _validateUserId(userId);
+      _validateSource(source);
+      _validateDateRange(startDate, endDate);
+
+      final total = await _incomeRepository.getTotalIncomeBySource(
+        userId,
+        source,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      debugPrint('Totale per fonte ${source.displayName}: €$total');
+      return total;
+    } catch (e) {
+      debugPrint('Errore nel calcolo totale per fonte: $e');
+      rethrow;
+    }
+  }
+
+  /// Calcola diversification score (0-100)
+  /// Score alto = entrate diversificate tra più fonti
+  Future<int> calculateDiversificationScore(String userId) async {
+    try {
+      _validateUserId(userId);
+
+      final stats = await getIncomeStatsBySource(userId);
+      final score = IncomeSourceHelper.calculateDiversificationScore(stats);
+
+      debugPrint('Diversification score: $score/100');
+      return score;
+    } catch (e) {
+      debugPrint('Errore nel calcolo diversification score: $e');
+      rethrow;
+    }
+  }
+
+  // ==============================================================================
+  // QUERY SPECIFICHE
   // ==============================================================================
 
   /// Ottieni entrate del mese corrente
@@ -183,7 +317,7 @@ class IncomeController {
       _validateUserId(userId);
 
       final incomes = await _incomeRepository.getCurrentMonthIncomes(userId);
-      debugPrint('Recuperate ${incomes.length} entrate del mese corrente');
+      debugPrint('Entrate mese corrente: ${incomes.length}');
       return incomes;
     } catch (e) {
       debugPrint('Errore nel recupero entrate mese corrente: $e');
@@ -197,7 +331,7 @@ class IncomeController {
       _validateUserId(userId);
 
       final incomes = await _incomeRepository.getCurrentWeekIncomes(userId);
-      debugPrint('Recuperate ${incomes.length} entrate della settimana corrente');
+      debugPrint('Entrate settimana corrente: ${incomes.length}');
       return incomes;
     } catch (e) {
       debugPrint('Errore nel recupero entrate settimana corrente: $e');
@@ -211,7 +345,7 @@ class IncomeController {
       _validateUserId(userId);
 
       final incomes = await _incomeRepository.getActiveRecurringIncomes(userId);
-      debugPrint('Recuperate ${incomes.length} entrate ricorrenti attive');
+      debugPrint('Entrate ricorrenti attive: ${incomes.length}');
       return incomes;
     } catch (e) {
       debugPrint('Errore nel recupero entrate ricorrenti: $e');
@@ -237,7 +371,7 @@ class IncomeController {
         endDate: endDate,
       );
 
-      debugPrint('Recuperate ${incomes.length} entrate per categoria: $categoryId');
+      debugPrint('Entrate per categoria $categoryId: ${incomes.length}');
       return incomes;
     } catch (e) {
       debugPrint('Errore nel recupero entrate per categoria: $e');
@@ -246,10 +380,10 @@ class IncomeController {
   }
 
   // ==============================================================================
-  // STATISTICHE E ANALYTICS
+  // STATISTICHE
   // ==============================================================================
 
-  /// Calcola il totale delle entrate per un periodo
+  /// Ottieni totale entrate per periodo
   Future<double> getTotalIncomeForPeriod(
       String userId, {
         required DateTime startDate,
@@ -265,15 +399,15 @@ class IncomeController {
         endDate: endDate,
       );
 
-      debugPrint('Totale entrate periodo: €${total.toStringAsFixed(2)}');
+      debugPrint('Totale entrate periodo: €$total');
       return total;
     } catch (e) {
-      debugPrint('Errore nel calcolo totale entrate: $e');
+      debugPrint('Errore nel calcolo totale periodo: $e');
       rethrow;
     }
   }
 
-  /// Ottieni statistiche entrate per categoria
+  /// Ottieni statistiche per categoria
   Future<Map<String, double>> getIncomeStatsByCategory(
       String userId, {
         DateTime? startDate,
@@ -289,7 +423,7 @@ class IncomeController {
         endDate: endDate,
       );
 
-      debugPrint('Statistiche entrate per categoria: ${stats.length} categorie');
+      debugPrint('Statistiche per categoria calcolate: ${stats.length} categorie');
       return stats;
     } catch (e) {
       debugPrint('Errore nel calcolo statistiche per categoria: $e');
@@ -297,18 +431,24 @@ class IncomeController {
     }
   }
 
-  /// Ottieni la media delle entrate mensili
-  Future<double> getMonthlyIncomeAverage(String userId, {int monthsCount = 12}) async {
+  /// Ottieni media mensile entrate
+  Future<double> getMonthlyIncomeAverage(
+      String userId, {
+        int monthsCount = 12,
+      }) async {
     try {
       _validateUserId(userId);
-      _validateMonthsCount(monthsCount);
+
+      if (monthsCount <= 0) {
+        throw const ValidationException('Il numero di mesi deve essere maggiore di zero');
+      }
 
       final average = await _incomeRepository.getMonthlyIncomeAverage(
         userId,
         monthsCount: monthsCount,
       );
 
-      debugPrint('Media mensile entrate (${monthsCount} mesi): €${average.toStringAsFixed(2)}');
+      debugPrint('Media mensile ($monthsCount mesi): €$average');
       return average;
     } catch (e) {
       debugPrint('Errore nel calcolo media mensile: $e');
@@ -316,47 +456,33 @@ class IncomeController {
     }
   }
 
-  /// Ottieni riepilogo entrate del mese corrente
+  /// Genera riepilogo completo mese corrente
   Future<Map<String, dynamic>> getCurrentMonthSummary(String userId) async {
     try {
       _validateUserId(userId);
 
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
-      final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-
       final incomes = await getCurrentMonthIncomes(userId);
-      final total = await getTotalIncomeForPeriod(
-        userId,
-        startDate: startOfMonth,
-        endDate: endOfMonth,
-      );
-      final stats = await getIncomeStatsByCategory(
-        userId,
-        startDate: startOfMonth,
-        endDate: endOfMonth,
-      );
-      final average = await getMonthlyIncomeAverage(userId, monthsCount: 6);
+      final total = incomes.fold(0.0, (sum, income) => sum + income.amount);
+      final average = await getMonthlyIncomeAverage(userId);
+      final stats = await getIncomeStatsByCategory(userId);
+
+      // ⬅️ NUOVO: Aggiungi stats per fonte
+      final sourceStats = await getIncomeStatsBySource(userId);
+      final diversificationScore = IncomeSourceHelper.calculateDiversificationScore(sourceStats);
 
       final summary = {
-        'period': {
-          'month': now.month,
-          'year': now.year,
-          'start_date': startOfMonth,
-          'end_date': endOfMonth,
-        },
-        'totals': {
-          'current_month': total,
-          'transaction_count': incomes.length,
-          'average_per_transaction': incomes.isNotEmpty ? total / incomes.length : 0.0,
-          'monthly_average': average,
-        },
+        'total': total,
+        'count': incomes.length,
+        'average': incomes.isNotEmpty ? total / incomes.length : 0.0,
+        'monthly_average': average,
         'category_breakdown': stats,
+        'source_breakdown': sourceStats.map((key, value) => MapEntry(key.displayName, value)), // ⬅️ NUOVO
+        'diversification_score': diversificationScore, // ⬅️ NUOVO
         'recent_incomes': incomes.take(5).map((income) => {
           'id': income.id,
           'amount': income.amount,
           'description': income.description,
-          'category': income.category.description,
+          'source': income.source.displayName, // ⬅️ NUOVO
           'date': income.incomeDate,
         }).toList(),
       };
@@ -429,7 +555,6 @@ class IncomeController {
       _validateUserId(userId);
       _validateDateRange(startDate, endDate);
 
-      debugPrint('Avviato stream entrate per utente: $userId');
       return _incomeRepository.getUserIncomesStream(
         userId,
         limit: limit,
@@ -437,7 +562,7 @@ class IncomeController {
         endDate: endDate,
       );
     } catch (e) {
-      debugPrint('Errore nell\'avvio stream entrate: $e');
+      debugPrint('Errore nell\'apertura stream entrate: $e');
       rethrow;
     }
   }
@@ -446,66 +571,10 @@ class IncomeController {
   Stream<List<IncomeModel>> getCurrentMonthIncomesStream(String userId) {
     try {
       _validateUserId(userId);
-
-      debugPrint('Avviato stream entrate mese corrente per utente: $userId');
       return _incomeRepository.getCurrentMonthIncomesStream(userId);
     } catch (e) {
-      debugPrint('Errore nell\'avvio stream entrate mese corrente: $e');
+      debugPrint('Errore nell\'apertura stream mese corrente: $e');
       rethrow;
-    }
-  }
-
-  // ==============================================================================
-  // UTILITY E HELPER METHODS
-  // ==============================================================================
-
-  /// Duplica un'entrata esistente
-  Future<IncomeModel> duplicateIncome(String userId, String incomeId, {
-    DateTime? newDate,
-    double? newAmount,
-  }) async {
-    try {
-      _validateUserId(userId);
-      _validateIncomeId(incomeId);
-
-      final originalIncome = await getIncomeById(userId, incomeId);
-      if (originalIncome == null) {
-        throw const ValidationException('Entrata originale non trovata');
-      }
-
-      final duplicatedIncome = await createIncome(
-        userId: userId,
-        amount: newAmount ?? originalIncome.amount,
-        description: '${originalIncome.description} (copia)',
-        categoryId: originalIncome.category.id,
-        incomeDate: newDate ?? DateTime.now(),
-        isRecurring: false, // Le copie non sono mai ricorrenti
-        recurrenceSettings: null,
-      );
-
-      debugPrint('Entrata duplicata: ${duplicatedIncome.id}');
-      return duplicatedIncome;
-    } catch (e) {
-      debugPrint('Errore nella duplicazione entrata: $e');
-      rethrow;
-    }
-  }
-
-  /// Verifica se un'entrata può essere eliminata (non ha dipendenze)
-  Future<bool> canDeleteIncome(String userId, String incomeId) async {
-    try {
-      _validateUserId(userId);
-      _validateIncomeId(incomeId);
-
-      final income = await getIncomeById(userId, incomeId);
-      if (income == null) return false;
-
-      // Per ora non ci sono dipendenze da controllare
-      // In futuro si potranno aggiungere controlli per budget, progetti, etc.
-      return true;
-    } catch (e) {
-      debugPrint('Errore nella verifica eliminazione entrata: $e');
-      return false;
     }
   }
 
@@ -514,81 +583,108 @@ class IncomeController {
   // ==============================================================================
 
   void _validateUserId(String userId) {
-    if (userId.trim().isEmpty) {
-      throw const ValidationException('User ID richiesto');
+    if (userId.isEmpty) {
+      throw const ValidationException('User ID non può essere vuoto');
     }
   }
 
   void _validateIncomeId(String incomeId) {
-    if (incomeId.trim().isEmpty) {
-      throw const ValidationException('Income ID richiesto');
+    if (incomeId.isEmpty) {
+      throw const ValidationException('Income ID non può essere vuoto');
     }
   }
 
   void _validateAmount(double amount) {
     if (amount <= 0) {
-      throw const ValidationException('Importo deve essere maggiore di zero');
+      throw const ValidationException('L\'importo deve essere maggiore di zero');
     }
-    if (amount > 999999999.99) {
-      throw const ValidationException('Importo troppo elevato');
+    if (amount > 1000000000) {
+      throw const ValidationException('L\'importo è troppo elevato');
     }
   }
 
   void _validateDescription(String description) {
     if (description.trim().isEmpty) {
-      throw const ValidationException('Descrizione richiesta');
+      throw const ValidationException('La descrizione non può essere vuota');
     }
-    if (description.length > 200) {
-      throw const ValidationException('Descrizione troppo lunga (max 200 caratteri)');
+    if (description.trim().length < 3) {
+      throw const ValidationException('La descrizione deve contenere almeno 3 caratteri');
+    }
+    if (description.length > 100) {
+      throw const ValidationException('La descrizione non può superare 100 caratteri');
     }
   }
 
   void _validateDate(DateTime date) {
     final now = DateTime.now();
-    final tenYearsAgo = now.subtract(const Duration(days: 365 * 10));
-    final tenYearsFromNow = now.add(const Duration(days: 365 * 10));
+    final maxFutureDate = now.add(const Duration(days: 365 * 5)); // 5 anni nel futuro
 
-    if (date.isBefore(tenYearsAgo) || date.isAfter(tenYearsFromNow)) {
-      throw const ValidationException('Data non valida (range: 10 anni nel passato/futuro)');
+    if (date.isAfter(maxFutureDate)) {
+      throw const ValidationException('La data non può essere così lontana nel futuro');
     }
+  }
+
+  // ⬅️ NUOVA VALIDAZIONE
+  void _validateSource(IncomeSource source) {
+    // Il source è un enum, quindi è sempre valido
+    // Ma possiamo aggiungere logiche future se necessario
+    debugPrint('Source validato: ${source.displayName}');
   }
 
   void _validateDateRange(DateTime? startDate, DateTime? endDate) {
     if (startDate != null && endDate != null) {
       if (startDate.isAfter(endDate)) {
-        throw const ValidationException('Data inizio deve essere precedente alla data fine');
-      }
-
-      final daysDifference = endDate.difference(startDate).inDays;
-      if (daysDifference > 365 * 2) {
-        throw const ValidationException('Range di date troppo ampio (max 2 anni)');
+        throw const ValidationException('La data di inizio deve essere precedente alla data di fine');
       }
     }
   }
 
   void _validateRecurrenceData(bool isRecurring, RecurrenceSettings? settings) {
-    if (isRecurring) {
-      if (settings == null) {
-        throw const ValidationException('Impostazioni ricorrenza richieste per entrate ricorrenti');
-      }
+    if (isRecurring && settings == null) {
+      throw const ValidationException(
+          'Le impostazioni di ricorrenza sono obbligatorie quando l\'entrata è ricorrente'
+      );
+    }
 
-      if (settings.endDate != null && settings.endDate!.isBefore(settings.startDate)) {
-        throw const ValidationException('Data fine ricorrenza deve essere successiva alla data inizio');
-      }
-
-      if (settings.type == RecurrenceType.custom && (settings.customIntervalDays == null || settings.customIntervalDays! <= 0)) {
-        throw const ValidationException('Intervallo personalizzato richiesto per ricorrenza custom');
-      }
+    if (!isRecurring && settings != null) {
+      throw const ValidationException(
+          'Non è possibile specificare impostazioni di ricorrenza per un\'entrata non ricorrente'
+      );
     }
   }
 
-  void _validateMonthsCount(int monthsCount) {
-    if (monthsCount <= 0 || monthsCount > 60) {
-      throw const ValidationException('Numero di mesi non valido (1-60)');
-    }
-  }
+  // ==============================================================================
+  // HELPER PRIVATI
+  // ==============================================================================
 
-  Future<CategoryModel?> _getCategoryForUser(String userId, String categoryId, {required bool isIncome}) async {
-    return await _categoryRepository.getCategoryById(userId, categoryId, isIncome: isIncome);
+  Future<CategoryModel?> _getCategoryForUser(
+      String userId,
+      String categoryId, {
+        required bool isIncome,
+      }) async {
+    try {
+      // Prima cerca nelle categorie default
+      final defaultCategories = isIncome
+          ? CategoryModel.getDefaultIncomeCategories()
+          : CategoryModel.getDefaultExpenseCategories();
+
+      for (final category in defaultCategories) {
+        if (category.id == categoryId) {
+          return category;
+        }
+      }
+
+      // Poi cerca nelle categorie custom dell'utente
+      // ⬅️ FIX: Usa getUserCustomCategoryById invece di getCustomCategoryById
+      final customCategory = await _categoryRepository.getUserCustomCategoryById(
+        userId,
+        categoryId,
+      );
+
+      return customCategory;
+    } catch (e) {
+      debugPrint('Errore nel recupero categoria: $e');
+      return null;
+    }
   }
 }

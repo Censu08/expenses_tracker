@@ -1,8 +1,9 @@
+import 'package:expenses_tracker/backend/models/income/income_source_enum.dart';
 import 'package:expenses_tracker/core/providers/bloc_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
-import '../../../../backend/models/income_model.dart';
+import '../../../../backend/models/income/income_model.dart';
 import '../../../../backend/models/recurrence_model.dart';
 import 'add_income_form.dart';
 
@@ -58,7 +59,7 @@ class IncomeDetailsDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: income.category.color.withOpacity(0.1),
+        color: income.source.color.withOpacity(0.1),
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(16),
         ),
@@ -68,11 +69,11 @@ class IncomeDetailsDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: income.category.color,
+              color: income.source.color,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              income.category.icon,
+              income.source.icon,
               color: Colors.white,
               size: 24,
             ),
@@ -86,14 +87,6 @@ class IncomeDetailsDialog extends StatelessWidget {
                   income.description,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  income.category.description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: income.category.color,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -169,13 +162,7 @@ class IncomeDetailsDialog extends StatelessWidget {
           Icons.calendar_today,
         ),
         const SizedBox(height: 12),
-        _buildDetailRow(
-          context,
-          'Categoria',
-          income.category.description,
-          income.category.icon,
-          iconColor: income.category.color,
-        ),
+        _buildSourceDetailRow(context),
         const SizedBox(height: 12),
         _buildDetailRow(
           context,
@@ -316,6 +303,56 @@ class IncomeDetailsDialog extends StatelessWidget {
                 value,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSourceDetailRow(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: income.source.color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            income.source.icon,
+            size: 20,
+            color: income.source.color,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Fonte di Reddito',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                income.source.displayName,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                income.source.description,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[600],
                 ),
               ),
             ],

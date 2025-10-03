@@ -2,17 +2,17 @@ import 'package:expenses_tracker/core/providers/bloc_providers.dart';
 import 'package:flutter/material.dart';
 import '../../../../backend/blocs/category_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
-import '../../../../backend/models/income_model.dart';
+import '../../../../backend/models/income/income_model.dart';
 import '../pages/income_page.dart';
 import '../widgets/add_income_form.dart';
 import '../widgets/income_details_dialog.dart';
+import '../../../../backend/models/income/income_source_enum.dart';
 
 class IncomePageFunctions {
 
   /// Carica i dati delle entrate
   static void loadIncomeData(BuildContext context, IncomePageState pageState) {
     final userId = context.currentUserId;
-
     if (userId == null) {
       debugPrint('❌ [IncomePage] userId is NULL! Cannot load incomes.');
       return;
@@ -28,12 +28,23 @@ class IncomePageFunctions {
       isIncome: true,
     ));
 
-    // Carica le entrate
-    context.incomeBloc.add(LoadUserIncomesEvent(
-      userId: userId,
-      startDate: startDate,
-      endDate: endDate,
-    ));
+    // ⬅️ NUOVA LOGICA: Controlla se c'è filtro source
+    if (pageState.selectedSource != null) {
+      // Carica solo entrate di quella fonte
+      context.incomeBloc.add(LoadIncomesBySourceEvent(
+        userId: userId,
+        source: pageState.selectedSource!,
+        startDate: startDate,
+        endDate: endDate,
+      ));
+    } else {
+      // Carica tutte le entrate
+      context.incomeBloc.add(LoadUserIncomesEvent(
+        userId: userId,
+        startDate: startDate,
+        endDate: endDate,
+      ));
+    }
   }
 
   /// Ottieni il range di date per il periodo selezionato
@@ -75,8 +86,8 @@ class IncomePageFunctions {
   static Map<String, double> calculateStats(List<IncomeModel> incomes) {
     final stats = <String, double>{};
     for (final income in incomes) {
-      final categoryId = income.category.id;
-      stats[categoryId] = (stats[categoryId] ?? 0.0) + income.amount;
+      final sourceEnum = income.source.toString();
+      stats[sourceEnum] = (stats[sourceEnum] ?? 0.0) + income.amount;
     }
     return stats;
   }

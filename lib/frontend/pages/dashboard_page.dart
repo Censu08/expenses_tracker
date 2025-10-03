@@ -7,7 +7,7 @@ import '../../core/utils/responsive_utils.dart';
 import '../../core/providers/bloc_providers.dart';
 import '../../core/cache/cache.dart';
 import '../../backend/blocs/blocs.dart';
-import '../../backend/models/income_model.dart';
+import '../../backend/models/income/income_model.dart';
 import '../../backend/models/expense_model.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -112,9 +112,6 @@ class _DashboardPageState extends State<DashboardPage> {
         'type': 'income',
         'amount': transaction.amount,
         'description': transaction.description,
-        'category': transaction.category.description, // ✅ Solo description (String)
-        'category_id': transaction.category.id,        // ✅ ID separato
-        'category_icon': transaction.category.id,      // ✅ Usa l'ID come identificatore icona
         'date': transaction.incomeDate,
         'is_recurring': transaction.isRecurring,
         'user_id': transaction.userId,

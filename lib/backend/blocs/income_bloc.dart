@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../controllers/income_controller.dart';
-import '../models/income_model.dart';
+import '../models/income/income_model.dart';
+import '../models/income/income_source_enum.dart';
 import '../models/recurrence_model.dart';
-import '../../core/errors/app_exceptions.dart';
 
 // ==============================================================================
 // EVENTI
@@ -16,12 +16,14 @@ abstract class IncomeEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// Eventi CRUD
 class CreateIncomeEvent extends IncomeEvent {
   final String userId;
   final double amount;
   final String description;
   final String categoryId;
   final DateTime incomeDate;
+  final IncomeSource source; // ⬅️ NUOVO CAMPO
   final bool isRecurring;
   final RecurrenceSettings? recurrenceSettings;
 
@@ -31,13 +33,15 @@ class CreateIncomeEvent extends IncomeEvent {
     required this.description,
     required this.categoryId,
     required this.incomeDate,
+    required this.source, // ⬅️ NUOVO PARAMETRO
     this.isRecurring = false,
     this.recurrenceSettings,
   });
 
   @override
   List<Object?> get props => [
-    userId, amount, description, categoryId, incomeDate, isRecurring, recurrenceSettings
+    userId, amount, description, categoryId, incomeDate,
+    source, isRecurring, recurrenceSettings // ⬅️ source aggiunto
   ];
 }
 
@@ -59,20 +63,16 @@ class LoadUserIncomesEvent extends IncomeEvent {
   final int? limit;
   final DateTime? startDate;
   final DateTime? endDate;
-  final String? categoryId;
-  final bool? isRecurring;
 
   const LoadUserIncomesEvent({
     required this.userId,
     this.limit,
     this.startDate,
     this.endDate,
-    this.categoryId,
-    this.isRecurring,
   });
 
   @override
-  List<Object?> get props => [userId, limit, startDate, endDate, categoryId, isRecurring];
+  List<Object?> get props => [userId, limit, startDate, endDate];
 }
 
 class LoadCurrentMonthIncomesEvent extends IncomeEvent {
@@ -128,6 +128,7 @@ class UpdateIncomeEvent extends IncomeEvent {
   final DateTime? incomeDate;
   final bool? isRecurring;
   final RecurrenceSettings? recurrenceSettings;
+  final IncomeSource? source; // ⬅️ NUOVO CAMPO
 
   const UpdateIncomeEvent({
     required this.userId,
@@ -138,11 +139,13 @@ class UpdateIncomeEvent extends IncomeEvent {
     this.incomeDate,
     this.isRecurring,
     this.recurrenceSettings,
+    this.source, // ⬅️ NUOVO PARAMETRO
   });
 
   @override
   List<Object?> get props => [
-    userId, incomeId, amount, description, categoryId, incomeDate, isRecurring, recurrenceSettings
+    userId, incomeId, amount, description, categoryId,
+    incomeDate, isRecurring, recurrenceSettings, source // ⬅️ source aggiunto
   ];
 }
 
@@ -176,7 +179,71 @@ class DuplicateIncomeEvent extends IncomeEvent {
   List<Object?> get props => [userId, incomeId, newDate, newAmount];
 }
 
-// Eventi per statistiche
+// ⬅️ NUOVI EVENTI PER SOURCE
+
+/// Carica entrate filtrate per fonte
+class LoadIncomesBySourceEvent extends IncomeEvent {
+  final String userId;
+  final IncomeSource source;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const LoadIncomesBySourceEvent({
+    required this.userId,
+    required this.source,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [userId, source, startDate, endDate];
+}
+
+/// Carica statistiche aggregate per fonte
+class LoadIncomeStatsBySourceEvent extends IncomeEvent {
+  final String userId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const LoadIncomeStatsBySourceEvent({
+    required this.userId,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [userId, startDate, endDate];
+}
+
+/// Carica totale per una specifica fonte
+class LoadIncomeTotalBySourceEvent extends IncomeEvent {
+  final String userId;
+  final IncomeSource source;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const LoadIncomeTotalBySourceEvent({
+    required this.userId,
+    required this.source,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [userId, source, startDate, endDate];
+}
+
+/// Calcola diversification score
+class LoadDiversificationScoreEvent extends IncomeEvent {
+  final String userId;
+
+  const LoadDiversificationScoreEvent({required this.userId});
+
+  @override
+  List<Object?> get props => [userId];
+}
+
+// Eventi per statistiche (esistenti)
 class LoadIncomeTotalForPeriodEvent extends IncomeEvent {
   final String userId;
   final DateTime startDate;
@@ -395,6 +462,70 @@ class IncomesByCategoryLoaded extends IncomeState {
   List<Object?> get props => [incomes, categoryId];
 }
 
+// ⬅️ NUOVI STATI PER SOURCE
+
+/// Stato per entrate filtrate per fonte
+class IncomesBySourceLoaded extends IncomeState {
+  final List<IncomeModel> incomes;
+  final IncomeSource source;
+
+  const IncomesBySourceLoaded({
+    required this.incomes,
+    required this.source,
+  });
+
+  @override
+  List<Object?> get props => [incomes, source];
+}
+
+/// Stato per statistiche aggregate per fonte
+class IncomeStatsBySourceLoaded extends IncomeState {
+  final Map<IncomeSource, double> stats;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const IncomeStatsBySourceLoaded({
+    required this.stats,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [stats, startDate, endDate];
+}
+
+/// Stato per totale per fonte specifica
+class IncomeTotalBySourceLoaded extends IncomeState {
+  final double total;
+  final IncomeSource source;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const IncomeTotalBySourceLoaded({
+    required this.total,
+    required this.source,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  List<Object?> get props => [total, source, startDate, endDate];
+}
+
+/// Stato per diversification score
+class DiversificationScoreLoaded extends IncomeState {
+  final int score; // 0-100
+  final String userId;
+
+  const DiversificationScoreLoaded({
+    required this.score,
+    required this.userId,
+  });
+
+  @override
+  List<Object?> get props => [score, userId];
+}
+
 // Stati per operazioni CRUD
 class IncomeCreated extends IncomeState {
   final IncomeModel income;
@@ -511,33 +642,26 @@ class RecurrenceSettingsUpdated extends IncomeState {
 // Stati per stream
 class IncomesStreamActive extends IncomeState {
   final List<IncomeModel> incomes;
-  final String userId;
 
-  const IncomesStreamActive({
-    required this.incomes,
-    required this.userId,
-  });
+  const IncomesStreamActive({required this.incomes});
 
   @override
-  List<Object?> get props => [incomes, userId];
+  List<Object?> get props => [incomes];
 }
 
 class CurrentMonthIncomesStreamActive extends IncomeState {
   final List<IncomeModel> incomes;
-  final String userId;
 
-  const CurrentMonthIncomesStreamActive({
-    required this.incomes,
-    required this.userId,
-  });
+  const CurrentMonthIncomesStreamActive({required this.incomes});
 
   @override
-  List<Object?> get props => [incomes, userId];
+  List<Object?> get props => [incomes];
 }
 
-class IncomesStreamStopped extends IncomeState {
-  const IncomesStreamStopped();
-}
+// File: lib/backend/blocs/income_bloc.dart
+// PARTE 2/2: BLoC Class e Handlers
+// ⚠️ IMPORTANTE: Questo va AGGIUNTO dopo la PARTE 1 (Eventi e Stati)
+// NON sostituire, ma CONCATENARE alla fine della PARTE 1
 
 // ==============================================================================
 // BLOC
@@ -545,9 +669,11 @@ class IncomesStreamStopped extends IncomeState {
 
 class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
   final IncomeController _incomeController;
+  Stream<List<IncomeModel>>? _incomesStreamSubscription;
 
-  IncomeBloc({IncomeController? incomeController})
-      : _incomeController = incomeController ?? IncomeController(),
+  IncomeBloc({
+    IncomeController? incomeController,
+  }) : _incomeController = incomeController ?? IncomeController(),
         super(const IncomeInitial()) {
 
     // Operazioni CRUD
@@ -561,6 +687,12 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
     on<UpdateIncomeEvent>(_onUpdateIncome);
     on<DeleteIncomeEvent>(_onDeleteIncome);
     on<DuplicateIncomeEvent>(_onDuplicateIncome);
+
+    // ⬅️ NUOVI HANDLER PER SOURCE
+    on<LoadIncomesBySourceEvent>(_onLoadIncomesBySource);
+    on<LoadIncomeStatsBySourceEvent>(_onLoadIncomeStatsBySource);
+    on<LoadIncomeTotalBySourceEvent>(_onLoadIncomeTotalBySource);
+    on<LoadDiversificationScoreEvent>(_onLoadDiversificationScore);
 
     // Statistiche
     on<LoadIncomeTotalForPeriodEvent>(_onLoadIncomeTotalForPeriod);
@@ -595,6 +727,7 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
         description: event.description,
         categoryId: event.categoryId,
         incomeDate: event.incomeDate,
+        source: event.source, // ⬅️ NUOVO PARAMETRO
         isRecurring: event.isRecurring,
         recurrenceSettings: event.recurrenceSettings,
       );
@@ -612,7 +745,10 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
     emit(const IncomeLoading());
 
     try {
-      final income = await _incomeController.getIncomeById(event.userId, event.incomeId);
+      final income = await _incomeController.getIncomeById(
+        event.userId,
+        event.incomeId,
+      );
 
       emit(IncomeByIdLoaded(
         income: income,
@@ -635,8 +771,6 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
         limit: event.limit,
         startDate: event.startDate,
         endDate: event.endDate,
-        categoryId: event.categoryId,
-        isRecurring: event.isRecurring,
       );
 
       emit(UserIncomesLoaded(
@@ -741,6 +875,7 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
         incomeDate: event.incomeDate,
         isRecurring: event.isRecurring,
         recurrenceSettings: event.recurrenceSettings,
+        source: event.source, // ⬅️ NUOVO PARAMETRO
       );
 
       emit(IncomeUpdated(income: income));
@@ -770,7 +905,11 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
     emit(const IncomeLoading());
 
     try {
-      final originalIncome = await _incomeController.getIncomeById(event.userId, event.incomeId);
+      final originalIncome = await _incomeController.getIncomeById(
+        event.userId,
+        event.incomeId,
+      );
+
       if (originalIncome == null) {
         emit(const IncomeError(message: 'Entrata originale non trovata'));
         return;
@@ -786,6 +925,105 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
       emit(IncomeDuplicated(
         originalIncome: originalIncome,
         duplicatedIncome: duplicatedIncome,
+      ));
+    } catch (e) {
+      emit(IncomeError(message: e.toString()));
+    }
+  }
+
+  // ==============================================================================
+  // ⬅️ NUOVI HANDLER PER SOURCE
+  // ==============================================================================
+
+  /// Handler per LoadIncomesBySourceEvent
+  Future<void> _onLoadIncomesBySource(
+      LoadIncomesBySourceEvent event,
+      Emitter<IncomeState> emit,
+      ) async {
+    emit(const IncomeLoading());
+
+    try {
+      final incomes = await _incomeController.getIncomesBySource(
+        event.userId,
+        event.source,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      );
+
+      emit(IncomesBySourceLoaded(
+        incomes: incomes,
+        source: event.source,
+      ));
+    } catch (e) {
+      emit(IncomeError(message: e.toString()));
+    }
+  }
+
+  /// Handler per LoadIncomeStatsBySourceEvent
+  Future<void> _onLoadIncomeStatsBySource(
+      LoadIncomeStatsBySourceEvent event,
+      Emitter<IncomeState> emit,
+      ) async {
+    emit(const IncomeLoading());
+
+    try {
+      final stats = await _incomeController.getIncomeStatsBySource(
+        event.userId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      );
+
+      emit(IncomeStatsBySourceLoaded(
+        stats: stats,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ));
+    } catch (e) {
+      emit(IncomeError(message: e.toString()));
+    }
+  }
+
+  /// Handler per LoadIncomeTotalBySourceEvent
+  Future<void> _onLoadIncomeTotalBySource(
+      LoadIncomeTotalBySourceEvent event,
+      Emitter<IncomeState> emit,
+      ) async {
+    emit(const IncomeLoading());
+
+    try {
+      final total = await _incomeController.getTotalIncomeBySource(
+        event.userId,
+        event.source,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      );
+
+      emit(IncomeTotalBySourceLoaded(
+        total: total,
+        source: event.source,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ));
+    } catch (e) {
+      emit(IncomeError(message: e.toString()));
+    }
+  }
+
+  /// Handler per LoadDiversificationScoreEvent
+  Future<void> _onLoadDiversificationScore(
+      LoadDiversificationScoreEvent event,
+      Emitter<IncomeState> emit,
+      ) async {
+    emit(const IncomeLoading());
+
+    try {
+      final score = await _incomeController.calculateDiversificationScore(
+        event.userId,
+      );
+
+      emit(DiversificationScoreLoaded(
+        score: score,
+        userId: event.userId,
       ));
     } catch (e) {
       emit(IncomeError(message: e.toString()));
@@ -924,17 +1162,19 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
       Emitter<IncomeState> emit,
       ) async {
     try {
-      await emit.forEach(
-        _incomeController.getUserIncomesStream(
-          event.userId,
-          limit: event.limit,
-          startDate: event.startDate,
-          endDate: event.endDate,
-        ),
-        onData: (incomes) => IncomesStreamActive(
-          incomes: incomes,
-          userId: event.userId,
-        ),
+      // Cancella stream precedente se esiste
+      _incomesStreamSubscription = null;
+
+      _incomesStreamSubscription = _incomeController.getUserIncomesStream(
+        event.userId,
+        limit: event.limit,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      );
+
+      await emit.forEach<List<IncomeModel>>(
+        _incomesStreamSubscription!,
+        onData: (incomes) => IncomesStreamActive(incomes: incomes),
         onError: (error, stackTrace) => IncomeError(message: error.toString()),
       );
     } catch (e) {
@@ -947,12 +1187,14 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
       Emitter<IncomeState> emit,
       ) async {
     try {
-      await emit.forEach(
-        _incomeController.getCurrentMonthIncomesStream(event.userId),
-        onData: (incomes) => CurrentMonthIncomesStreamActive(
-          incomes: incomes,
-          userId: event.userId,
-        ),
+      // Cancella stream precedente se esiste
+      _incomesStreamSubscription = null;
+
+      _incomesStreamSubscription = _incomeController.getCurrentMonthIncomesStream(event.userId);
+
+      await emit.forEach<List<IncomeModel>>(
+        _incomesStreamSubscription!,
+        onData: (incomes) => CurrentMonthIncomesStreamActive(incomes: incomes),
         onError: (error, stackTrace) => IncomeError(message: error.toString()),
       );
     } catch (e) {
@@ -964,54 +1206,13 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
       StopIncomesStreamEvent event,
       Emitter<IncomeState> emit,
       ) async {
-    emit(const IncomesStreamStopped());
+    _incomesStreamSubscription = null;
+    emit(const IncomeInitial());
   }
 
-  // ==============================================================================
-  // GETTER DI UTILITÀ
-  // ==============================================================================
-
-  bool get isLoading => state is IncomeLoading;
-  bool get hasError => state is IncomeError;
-  String? get errorMessage => state is IncomeError ? (state as IncomeError).message : null;
-
-  List<IncomeModel>? get currentIncomes {
-    if (state is UserIncomesLoaded) {
-      return (state as UserIncomesLoaded).incomes;
-    } else if (state is CurrentMonthIncomesLoaded) {
-      return (state as CurrentMonthIncomesLoaded).incomes;
-    } else if (state is CurrentWeekIncomesLoaded) {
-      return (state as CurrentWeekIncomesLoaded).incomes;
-    } else if (state is ActiveRecurringIncomesLoaded) {
-      return (state as ActiveRecurringIncomesLoaded).incomes;
-    } else if (state is IncomesByCategoryLoaded) {
-      return (state as IncomesByCategoryLoaded).incomes;
-    } else if (state is IncomesStreamActive) {
-      return (state as IncomesStreamActive).incomes;
-    } else if (state is CurrentMonthIncomesStreamActive) {
-      return (state as CurrentMonthIncomesStreamActive).incomes;
-    }
-    return null;
-  }
-
-  double? get currentTotal {
-    if (state is IncomeTotalForPeriodLoaded) {
-      return (state as IncomeTotalForPeriodLoaded).total;
-    }
-    return null;
-  }
-
-  Map<String, double>? get currentStatsByCategory {
-    if (state is IncomeStatsByCategoryLoaded) {
-      return (state as IncomeStatsByCategoryLoaded).stats;
-    }
-    return null;
-  }
-
-  Map<String, dynamic>? get currentMonthSummary {
-    if (state is CurrentMonthSummaryLoaded) {
-      return (state as CurrentMonthSummaryLoaded).summary;
-    }
-    return null;
+  @override
+  Future<void> close() {
+    _incomesStreamSubscription = null;
+    return super.close();
   }
 }

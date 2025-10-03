@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../backend/models/models.dart';
 import '../pages/income_page.dart';
 import '../functions/income_page_functions.dart';
+import 'income_source_badge.dart';
 
 class IncomeListTile extends StatelessWidget {
   final IncomeModel income;
@@ -21,8 +22,8 @@ class IncomeListTile extends StatelessWidget {
         vertical: 8,
       ),
       leading: CircleAvatar(
-        backgroundColor: income.category.color.withOpacity(0.1),
-        child: Icon(income.category.icon, color: income.category.color),
+        backgroundColor: income.source.color.withOpacity(0.1),
+        child: Icon(income.source.icon, color: income.source.color),
       ),
       title: Text(
         income.description,
@@ -32,27 +33,27 @@ class IncomeListTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${income.category.description} • ${IncomePageFunctions.formatDate(income.incomeDate)}',
+            income.description,
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
-          if (income.isRecurring)
-            Row(
-              children: [
-                Icon(
-                  Icons.repeat,
-                  size: 14,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Ricorrente',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              // Badge categoria esistente
+              Icon(income.source.icon, size: 14, color: income.source.color),
+              const SizedBox(width: 4),
+              Text(
+                income.source.description,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(width: 12),
+              IncomeSourceBadge(
+                source: income.source,
+                showLabel: true,
+                iconSize: 14,
+              ),
+            ],
+          ),
         ],
       ),
       trailing: Row(

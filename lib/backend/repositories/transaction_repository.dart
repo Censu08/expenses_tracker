@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/income_model.dart';
+import '../models/income/income_model.dart';
 import '../models/expense_model.dart';
 import '../models/category_model.dart';
+import '../models/income/income_source_enum.dart';
 import 'income_repository.dart';
 import 'expense_repository.dart';
 import 'category_repository.dart';
@@ -185,7 +186,6 @@ class TransactionRepository {
           'type': t is IncomeModel ? 'income' : 'expense',
           'amount': t is IncomeModel ? t.amount : (t as ExpenseModel).amount,
           'description': t is IncomeModel ? t.description : (t as ExpenseModel).description,
-          'category': t is IncomeModel ? t.category.description : (t as ExpenseModel).category.description,
           'date': t is IncomeModel ? t.incomeDate : (t as ExpenseModel).expenseDate,
         }).toList(),
       };
@@ -204,6 +204,7 @@ class TransactionRepository {
     required CategoryModel fromCategory, // Categoria spesa
     required CategoryModel toCategory,   // Categoria entrata
     required DateTime date,
+    IncomeSource? transferSource,
   }) async {
     try {
       final batch = _firestore.batch();
@@ -222,8 +223,8 @@ class TransactionRepository {
         userId: userId,
         amount: amount,
         description: 'Trasferimento: $description',
-        category: toCategory,
         incomeDate: date,
+        source: transferSource ?? IncomeSource.other, // ⬅️ AGGIUNGERE QUESTO
       );
 
       return {
@@ -236,6 +237,7 @@ class TransactionRepository {
       throw Exception('Errore nella creazione trasferimento: $e');
     }
   }
+
 
   /// Elimina tutti i dati finanziari dell'utente
   Future<void> deleteAllUserFinancialData(String userId) async {

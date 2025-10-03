@@ -294,7 +294,26 @@ class IncomeStateWidget extends StatelessWidget {
           );
         }
 
-        final incomes = context.read<IncomeBloc>().currentIncomes;
+        // ⬅️ NUOVA LOGICA: Estrai incomes dallo stato
+        List<IncomeModel>? incomes;
+
+        if (state is UserIncomesLoaded) {
+          incomes = state.incomes;
+        } else if (state is CurrentMonthIncomesLoaded) {
+          incomes = state.incomes;
+        } else if (state is CurrentWeekIncomesLoaded) {
+          incomes = state.incomes;
+        } else if (state is ActiveRecurringIncomesLoaded) {
+          incomes = state.incomes;
+        } else if (state is IncomesByCategoryLoaded) {
+          incomes = state.incomes;
+        } else if (state is IncomesBySourceLoaded) {
+          incomes = state.incomes;
+        } else if (state is IncomesStreamActive) {
+          incomes = state.incomes;
+        } else if (state is CurrentMonthIncomesStreamActive) {
+          incomes = state.incomes;
+        }
 
         if (incomes == null || incomes.isEmpty) {
           return DefaultEmptyWidget(
