@@ -1,7 +1,7 @@
+import 'package:expenses_tracker/frontend/sections/income/pages/income_page.dart';
 import 'package:flutter/material.dart';
 import '../../core/utils/responsive_utils.dart';
 import '../pages/dashboard_page.dart';
-import '../pages/income_page.dart';
 import '../pages/transactions_page.dart';
 import '../pages/recurring_expenses_page.dart';
 import '../pages/projects_page.dart';

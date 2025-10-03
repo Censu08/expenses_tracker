@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../backend/models/models.dart';
 import '../../backend/blocs/blocs.dart';
 import '../../core/providers/bloc_providers.dart';
-import '../../core/utils/responsive_utils.dart';
 
 class AddIncomeForm extends StatefulWidget {
   final IncomeModel? initialIncome;
@@ -34,32 +33,15 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
 
   bool _isLoading = false;
   List<CategoryModel> _categories = [];
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadCategories();
-    _initializeForm();
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  void _initializeForm() {
     if (widget.initialIncome != null) {
       final income = widget.initialIncome!;
       _amountController.text = income.amount.toStringAsFixed(2);
       _descriptionController.text = income.description;
-      _selectedCategory = income.category;
       _selectedDate = income.incomeDate;
       _isRecurring = income.isRecurring;
 
@@ -69,6 +51,22 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
         _endDate = income.recurrenceSettings!.endDate;
       }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      _loadCategories();
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   void _loadCategories() {
@@ -81,6 +79,24 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     }
   }
 
+  // Rimuove duplicati dalla lista delle categorie usando l'ID come chiave
+  List<CategoryModel> _getUniqueCategoriesById(List<CategoryModel> categories) {
+    final Map<String, CategoryModel> uniqueMap = {};
+    for (final category in categories) {
+      uniqueMap[category.id] = category;
+    }
+    return uniqueMap.values.toList();
+  }
+
+  // Trova la categoria corrispondente nella lista usando l'ID
+  CategoryModel? _findCategoryById(String categoryId, List<CategoryModel> categories) {
+    try {
+      return categories.firstWhere((cat) => cat.id == categoryId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -88,49 +104,32 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        width: MediaQuery.of(context).size.width * 0.75,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: BorderRadius.circular(16),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxWidth: 600,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildHeader(),
-            Flexible(
-              child: BlocListener<IncomeBloc, IncomeState>(
-                listener: (context, state) {
-                  if (state is IncomeCreated || state is IncomeUpdated) {
-                    widget.onIncomeAdded();
-                  } else if (state is IncomeError) {
-                    setState(() => _isLoading = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
                 child: Form(
                   key: _formKey,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildAmountField(),
-                        const SizedBox(height: 16),
-                        _buildDescriptionField(),
-                        const SizedBox(height: 16),
-                        _buildCategorySelector(),
-                        const SizedBox(height: 16),
-                        _buildDateSelector(),
-                        const SizedBox(height: 16),
-                        _buildRecurrenceSection(),
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildAmountField(),
+                      const SizedBox(height: 16),
+                      _buildDescriptionField(),
+                      const SizedBox(height: 16),
+                      _buildCategorySelector(),
+                      const SizedBox(height: 16),
+                      _buildDateSelector(),
+                      const SizedBox(height: 24),
+                      _buildRecurrenceSection(),
+                    ],
                   ),
                 ),
               ),
@@ -146,26 +145,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(16),
         ),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.trending_up,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Text(
               widget.initialIncome == null ? 'Nuova Entrata' : 'Modifica Entrata',
@@ -177,47 +163,6 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(16),
-        ),
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Annulla'),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _saveIncome,
-              child: _isLoading
-                  ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-                  : Text(widget.initialIncome == null ? 'Crea' : 'Aggiorna'),
-            ),
           ),
         ],
       ),
@@ -279,11 +224,45 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     return BlocBuilder<CategoryBloc, CategoryState>(
       builder: (context, state) {
         if (state is CategoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
 
         if (state is AllUserCategoriesLoaded) {
-          _categories = state.categories;
+          // Rimuovi duplicati usando l'ID come chiave univoca
+          _categories = _getUniqueCategoriesById(state.categories);
+
+          // Se abbiamo un initialIncome, trova la categoria corrispondente nella lista
+          if (widget.initialIncome != null && _selectedCategory == null) {
+            _selectedCategory = _findCategoryById(
+              widget.initialIncome!.category.id,
+              _categories,
+            );
+          }
+        }
+
+        if (_categories.isEmpty) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  const Icon(Icons.category_outlined, size: 48),
+                  const SizedBox(height: 8),
+                  const Text('Nessuna categoria disponibile'),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _loadCategories,
+                    child: const Text('Ricarica'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         return DropdownButtonFormField<CategoryModel>(
@@ -296,7 +275,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
           ),
           value: _selectedCategory,
           items: _categories.map((category) {
-            return DropdownMenuItem(
+            return DropdownMenuItem<CategoryModel>(
               value: category,
               child: Row(
                 children: [
@@ -446,9 +425,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                         ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
                         : 'Nessuna data di fine',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: _endDate != null
-                          ? null
-                          : Theme.of(context).hintColor,
+                      color: _endDate != null ? null : Colors.grey,
                     ),
                   ),
                 ),
@@ -458,6 +435,140 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
         ),
       ),
     );
+  }
+
+  Widget _buildActionButtons() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(16),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annulla'),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _saveIncome,
+              child: _isLoading
+                  ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+                  : Text(widget.initialIncome == null ? 'Crea' : 'Aggiorna'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  Future<void> _selectEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? DateTime.now().add(const Duration(days: 365)),
+      firstDate: _selectedDate,
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _endDate = picked);
+    }
+  }
+
+  Future<void> _saveIncome() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Seleziona una categoria')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final userId = context.currentUserId;
+      if (userId == null) {
+        throw Exception('Utente non autenticato');
+      }
+
+      final amount = double.parse(_amountController.text);
+      final description = _descriptionController.text.trim();
+
+      RecurrenceSettings? recurrenceSettings;
+      if (_isRecurring) {
+        recurrenceSettings = RecurrenceSettings(
+          type: _recurrenceType,
+          startDate: _selectedDate,
+          endDate: _endDate,
+          necessityLevel: _necessityLevel,
+        );
+      }
+
+      if (widget.initialIncome == null) {
+        // Crea nuova entrata
+        context.incomeBloc.add(CreateIncomeEvent(
+          userId: userId,
+          amount: amount,
+          description: description,
+          categoryId: _selectedCategory!.id,
+          incomeDate: _selectedDate,
+          isRecurring: _isRecurring,
+          recurrenceSettings: recurrenceSettings,
+        ));
+      } else {
+        // Aggiorna entrata esistente
+        context.incomeBloc.add(UpdateIncomeEvent(
+          userId: userId,
+          incomeId: widget.initialIncome!.id,
+          amount: amount,
+          description: description,
+          categoryId: _selectedCategory!.id,
+          incomeDate: _selectedDate,
+          isRecurring: _isRecurring,
+          recurrenceSettings: recurrenceSettings,
+        ));
+      }
+
+      widget.onIncomeAdded();
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   String _getRecurrenceTypeLabel(RecurrenceType type) {
@@ -491,13 +602,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   IconData _getNecessityIcon(NecessityLevel level) {
     switch (level) {
       case NecessityLevel.low:
-        return Icons.low_priority;
+        return Icons.arrow_downward;
       case NecessityLevel.medium:
-        return Icons.priority_high;
+        return Icons.remove;
       case NecessityLevel.high:
-        return Icons.warning;
+        return Icons.arrow_upward;
       case NecessityLevel.critical:
-        return Icons.error;
+        return Icons.warning;
     }
   }
 
@@ -510,93 +621,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
       case NecessityLevel.high:
         return Colors.red;
       case NecessityLevel.critical:
-        return Colors.red[900]!;
-    }
-  }
-
-  Future<void> _selectDate() async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      setState(() => _selectedDate = pickedDate);
-    }
-  }
-
-  Future<void> _selectEndDate() async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _endDate ?? _selectedDate.add(const Duration(days: 365)),
-      firstDate: _selectedDate,
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      setState(() => _endDate = pickedDate);
-    }
-  }
-
-  void _saveIncome() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final userId = context.read<UserBloc>().state is UserAuthenticated
-        ? (context.read<UserBloc>().state as UserAuthenticated).user.id
-        : null;
-
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Errore: utente non autenticato'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    final amount = double.parse(_amountController.text);
-    final description = _descriptionController.text.trim();
-
-    RecurrenceSettings? recurrenceSettings;
-    if (_isRecurring) {
-      recurrenceSettings = RecurrenceSettings(
-        type: _recurrenceType,
-        startDate: _selectedDate,
-        endDate: _endDate,
-        necessityLevel: _necessityLevel,
-      );
-    }
-
-    if (widget.initialIncome == null) {
-      // Crea nuova entrata
-      context.read<IncomeBloc>().add(CreateIncomeEvent(
-        userId: userId,
-        amount: amount,
-        description: description,
-        categoryId: _selectedCategory!.id,
-        incomeDate: _selectedDate,
-        isRecurring: _isRecurring,
-        recurrenceSettings: recurrenceSettings,
-      ));
-    } else {
-      // Aggiorna entrata esistente
-      context.read<IncomeBloc>().add(UpdateIncomeEvent(
-        userId: userId,
-        incomeId: widget.initialIncome!.id,
-        amount: amount,
-        description: description,
-        categoryId: _selectedCategory!.id,
-        incomeDate: _selectedDate,
-        isRecurring: _isRecurring,
-        recurrenceSettings: recurrenceSettings,
-      ));
+        return Colors.deepPurple;
     }
   }
 }

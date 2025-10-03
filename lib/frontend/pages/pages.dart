@@ -1,5 +1,4 @@
 export 'dashboard_page.dart';
-export 'income_page.dart';
 export 'transactions_page.dart';
 export 'recurring_expenses_page.dart';
 export 'projects_page.dart';
