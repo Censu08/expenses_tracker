@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../backend/blocs/category_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
 import '../../../../backend/models/income_model.dart';
-import '../../../widgets/add_income_form.dart';
-import '../../../widgets/income_details_dialog.dart';
 import '../pages/income_page.dart';
 import '../widgets/add_income_form.dart';
 import '../widgets/income_details_dialog.dart';
