@@ -10,7 +10,6 @@ import '../../../../backend/models/income/income_source_enum.dart';
 
 class IncomePageFunctions {
 
-  /// Carica i dati delle entrate
   static void loadIncomeData(BuildContext context, IncomePageState pageState) {
     final userId = context.currentUserId;
     if (userId == null) {
@@ -22,15 +21,12 @@ class IncomePageFunctions {
     final (startDate, endDate) = getDateRangeForPeriod(pageState.selectedPeriod);
     debugPrint('🔍 [IncomePage] Date range: $startDate to $endDate');
 
-    // Carica categorie entrate
     context.categoryBloc.add(LoadAllUserCategoriesEvent(
       userId: userId,
       isIncome: true,
     ));
 
-    // ⬅️ NUOVA LOGICA: Controlla se c'è filtro source
     if (pageState.selectedSource != null) {
-      // Carica solo entrate di quella fonte
       context.incomeBloc.add(LoadIncomesBySourceEvent(
         userId: userId,
         source: pageState.selectedSource!,
@@ -38,7 +34,6 @@ class IncomePageFunctions {
         endDate: endDate,
       ));
     } else {
-      // Carica tutte le entrate
       context.incomeBloc.add(LoadUserIncomesEvent(
         userId: userId,
         startDate: startDate,
@@ -47,7 +42,6 @@ class IncomePageFunctions {
     }
   }
 
-  /// Ottieni il range di date per il periodo selezionato
   static (DateTime?, DateTime?) getDateRangeForPeriod(String period) {
     final now = DateTime.now();
     switch (period) {
@@ -82,17 +76,15 @@ class IncomePageFunctions {
     }
   }
 
-  /// Calcola statistiche localmente
   static Map<String, double> calculateStats(List<IncomeModel> incomes) {
     final stats = <String, double>{};
     for (final income in incomes) {
-      final sourceEnum = income.source.toString();
-      stats[sourceEnum] = (stats[sourceEnum] ?? 0.0) + income.amount;
+      final sourceName = income.source.displayName;
+      stats[sourceName] = (stats[sourceName] ?? 0.0) + income.amount;
     }
     return stats;
   }
 
-  /// Formatta la data
   static String formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
@@ -108,7 +100,6 @@ class IncomePageFunctions {
     }
   }
 
-  /// Mostra dialog per aggiungere entrata
   static void showAddIncomeDialog(BuildContext context, IncomePageState pageState) {
     showDialog(
       context: context,
@@ -124,7 +115,6 @@ class IncomePageFunctions {
     );
   }
 
-  /// Mostra dettagli entrata
   static void showIncomeDetails(
       BuildContext context,
       IncomePageState pageState,
@@ -139,7 +129,6 @@ class IncomePageFunctions {
     );
   }
 
-  /// Gestisce azioni su entrata (edit/delete)
   static void handleIncomeAction(
       BuildContext context,
       IncomePageState pageState,
@@ -159,7 +148,6 @@ class IncomePageFunctions {
     }
   }
 
-  /// Mostra dialog per modificare entrata
   static void showEditIncomeDialog(
       BuildContext context,
       IncomePageState pageState,
@@ -180,7 +168,6 @@ class IncomePageFunctions {
     );
   }
 
-  /// Mostra conferma eliminazione
   static void showDeleteConfirmation(
       BuildContext context,
       IncomePageState pageState,
@@ -209,7 +196,6 @@ class IncomePageFunctions {
     );
   }
 
-  /// Elimina entrata
   static void deleteIncome(
       BuildContext context,
       IncomePageState pageState,
@@ -223,7 +209,6 @@ class IncomePageFunctions {
       incomeId: income.id,
     ));
 
-    // Rimuovi dalla cache locale
     pageState.setState(() {
       pageState.cachedIncomes.removeWhere((i) => i.id == income.id);
       pageState.cachedStats = calculateStats(pageState.cachedIncomes);

@@ -6,7 +6,6 @@ import '../../../../core/providers/bloc_providers.dart';
 import '../pages/income_page.dart';
 import 'income_source_analytics_dialog.dart';
 
-/// Bottone che apre il dialog con l'analisi completa delle fonti di reddito
 class IncomeSourceAnalyticsButton extends StatefulWidget {
   final IncomePageState pageState;
 
@@ -38,12 +37,10 @@ class _IncomeSourceAnalyticsButtonState
 
     setState(() => _isLoading = true);
 
-    // Carica solo lo score per preview
     context.read<IncomeBloc>().add(LoadDiversificationScoreEvent(
       userId: userId,
     ));
 
-    // Carica stats per conteggio fonti
     context.read<IncomeBloc>().add(LoadIncomeStatsBySourceEvent(
       userId: userId,
       startDate: _getStartDate(),
@@ -88,7 +85,6 @@ class _IncomeSourceAnalyticsButtonState
             _cachedScore = state.score;
           });
         }
-        // Ricarica dopo operazioni CRUD
         if (state is IncomeCreated ||
             state is IncomeUpdated ||
             state is IncomeDeleted) {
@@ -96,14 +92,28 @@ class _IncomeSourceAnalyticsButtonState
         }
       },
       child: Card(
+        elevation: 3,
+        shadowColor: Colors.blue.withOpacity(0.2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: InkWell(
           onTap: () => _showAnalyticsDialog(context),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: _isLoading
-                ? _buildLoadingState()
-                : _buildButtonContent(context),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.blue.withOpacity(0.05),
+                  Colors.purple.withOpacity(0.05),
+                ],
+              ),
+            ),
+            child: _isLoading ? _buildLoadingState() : _buildButtonContent(context),
           ),
         ),
       ),
@@ -115,14 +125,17 @@ class _IncomeSourceAnalyticsButtonState
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-          width: 20,
-          height: 20,
+          width: 18,
+          height: 18,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
-        const SizedBox(width: 12),
-        Text(
-          'Caricamento analisi...',
-          style: TextStyle(color: Colors.grey[600]),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            'Caricamento...',
+            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
@@ -131,9 +144,8 @@ class _IncomeSourceAnalyticsButtonState
   Widget _buildButtonContent(BuildContext context) {
     return Row(
       children: [
-        // Icona + Badge
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -146,108 +158,75 @@ class _IncomeSourceAnalyticsButtonState
           child: Icon(
             Icons.analytics,
             color: Colors.blue,
-            size: 32,
+            size: 24,
           ),
         ),
-        const SizedBox(width: 16),
-
-        // Testo e Info
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Text(
-                    'Analisi Fonti di Reddito',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.open_in_new,
-                    size: 16,
+              Text(
+                'Analisi Fonti',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              if (_cachedStats != null)
+                Text(
+                  '${_cachedStats!.length} fonte${_cachedStats!.length != 1 ? 'i' : ''}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
+                    fontSize: 11,
                   ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  if (_cachedStats != null) ...[
-                    Icon(
-                      Icons.source,
-                      size: 14,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${_cachedStats!.length} ${_cachedStats!.length == 1 ? 'fonte attiva' : 'fonti attive'}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ] else
-                    Text(
-                      'Tocca per visualizzare',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                ],
-              ),
+                  overflow: TextOverflow.ellipsis,
+                ),
             ],
           ),
         ),
-
-        // Score Badge (se disponibile)
         if (_cachedScore != null) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: _getScoreColor(_cachedScore!).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: _getScoreColor(_cachedScore!).withOpacity(0.5),
-                width: 2,
+                width: 1.5,
               ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.stars,
-                  color: _getScoreColor(_cachedScore!),
-                  size: 20,
-                ),
-                const SizedBox(height: 4),
                 Text(
                   '$_cachedScore',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: _getScoreColor(_cachedScore!),
+                    height: 1,
                   ),
                 ),
                 Text(
-                  'su 100',
+                  '/100',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 8,
                     color: _getScoreColor(_cachedScore!).withOpacity(0.8),
+                    height: 1,
                   ),
                 ),
               ],
             ),
           ),
         ],
-
-        // Arrow
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Icon(
           Icons.arrow_forward_ios,
-          size: 20,
+          size: 16,
           color: Colors.grey[400],
         ),
       ],
@@ -256,7 +235,6 @@ class _IncomeSourceAnalyticsButtonState
 
   void _showAnalyticsDialog(BuildContext context) {
     if (_cachedStats == null || _cachedScore == null) {
-      // Mostra snackbar se dati non pronti
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Caricamento dati in corso...'),

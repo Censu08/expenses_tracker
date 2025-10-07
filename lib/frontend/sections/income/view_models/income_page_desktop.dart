@@ -19,58 +19,82 @@ class IncomePageDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: ResponsiveUtils.getPagePadding(context),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.background,
+            Theme.of(context).colorScheme.primary.withOpacity(0.02),
+          ],
+        ),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Selettore periodo
-          PeriodSelector(pageState: pageState),
-          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-
-          // Filtro fonti
-          IncomeSourceFilter(
-            selectedSource: pageState.selectedSource,
-            onSourceSelected: (source) {
-              pageState.setState(() {
-                pageState.selectedSource = source;
-              });
-              IncomePageFunctions.loadIncomeData(context, pageState);
-            },
-          ),
-          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-
-          // Layout principale espandibile
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              ResponsiveUtils.getPagePadding(context).left,
+              ResponsiveUtils.getPagePadding(context).top,
+              ResponsiveUtils.getPagePadding(context).right,
+              ResponsiveUtils.getSpacing(context),
+            ),
+            child: Column(
               children: [
-                // Colonna sinistra: Summary + Breakdown
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      IncomeSummaryCard(pageState: pageState),
-                      SizedBox(height: ResponsiveUtils.getSpacing(context)),
-
-                      // ⬅️ NUOVO: Bottone Analisi Fonti (apre dialog)
-                      IncomeSourceAnalyticsButton(pageState: pageState),
-                      SizedBox(height: ResponsiveUtils.getSpacing(context)),
-
-                      Expanded(
-                        child: IncomeBreakdownCard(pageState: pageState),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: ResponsiveUtils.getSpacing(context)),
-
-                // Colonna destra: Lista entrate
-                Expanded(
-                  flex: 2,
-                  child: RecentIncomeCard(pageState: pageState),
+                PeriodSelector(pageState: pageState),
+                SizedBox(height: ResponsiveUtils.getSpacing(context)),
+                IncomeSourceFilter(
+                  selectedSource: pageState.selectedSource,
+                  onSourceSelected: (source) {
+                    pageState.setState(() {
+                      pageState.selectedSource = source;
+                    });
+                    IncomePageFunctions.loadIncomeData(context, pageState);
+                  },
                 ),
               ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveUtils.getPagePadding(context).left,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          IncomeSummaryCard(
+                            key: ValueKey('summary_${pageState.selectedSource?.toString() ?? 'all'}'),
+                            pageState: pageState,
+                          ),
+                          SizedBox(height: ResponsiveUtils.getSpacing(context)),
+                          IncomeSourceAnalyticsButton(pageState: pageState),
+                          SizedBox(height: ResponsiveUtils.getSpacing(context)),
+                          SizedBox(
+                            height: 400,
+                            child: IncomeBreakdownCard(
+                              key: ValueKey('breakdown_${pageState.selectedSource?.toString() ?? 'all'}'),
+                              pageState: pageState,
+                            ),
+                          ),
+                          SizedBox(height: ResponsiveUtils.getSpacing(context)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: ResponsiveUtils.getSpacing(context) * 1.5),
+                  Expanded(
+                    flex: 4,
+                    key: ValueKey('recent_${pageState.selectedSource?.toString() ?? 'all'}'),
+                    child: RecentIncomeCard(pageState: pageState),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
