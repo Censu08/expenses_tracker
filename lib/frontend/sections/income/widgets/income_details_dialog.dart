@@ -21,17 +21,22 @@ class IncomeDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
+      elevation: 10,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: const BoxConstraints(maxWidth: 550),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildHeader(context),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -59,9 +64,16 @@ class IncomeDetailsDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: income.source.color.withOpacity(0.1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            income.source.color.withOpacity(0.15),
+            income.source.color.withOpacity(0.08),
+          ],
+        ),
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(16),
+          top: Radius.circular(20),
         ),
       ),
       child: Row(
@@ -69,13 +81,25 @@ class IncomeDetailsDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: income.source.color,
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  income.source.color,
+                  income.source.color.withOpacity(0.7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: income.source.color.withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Icon(
               income.source.icon,
               color: Colors.white,
-              size: 24,
+              size: 28,
             ),
           ),
           const SizedBox(width: 16),
@@ -87,6 +111,17 @@ class IncomeDetailsDialog extends StatelessWidget {
                   income.description,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                    color: Colors.grey[900],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  income.source.displayName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: income.source.color,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -95,6 +130,9 @@ class IncomeDetailsDialog extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.of(context).pop(),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.8),
+            ),
           ),
         ],
       ),
@@ -102,44 +140,80 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildAmountSection(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Text(
-            '€ ${income.amount.toStringAsFixed(2)}',
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-              color: Colors.green,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.green.withOpacity(0.08),
+            Colors.green.withOpacity(0.15),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.green.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Icon(
-                  Icons.trending_up,
-                  size: 16,
-                  color: Colors.green,
+                Text(
+                  '€',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.green.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Entrata',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                  income.amount.toStringAsFixed(2),
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                    color: Colors.green.shade700,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -1,
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.trending_up,
+                    size: 18,
+                    color: Colors.green.shade700,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Entrata',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -148,17 +222,28 @@ class IncomeDetailsDialog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Dettagli',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Dettagli',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         _buildDetailRow(
           context,
           'Data',
-          '${income.incomeDate.day}/${income.incomeDate.month}/${income.incomeDate.year}',
+          '${income.incomeDate.day.toString().padLeft(2, '0')}/${income.incomeDate.month.toString().padLeft(2, '0')}/${income.incomeDate.year}',
           Icons.calendar_today,
         ),
         const SizedBox(height: 12),
@@ -167,7 +252,7 @@ class IncomeDetailsDialog extends StatelessWidget {
         _buildDetailRow(
           context,
           'ID Transazione',
-          income.id,
+          income.id.substring(0, 8) + '...',
           Icons.fingerprint,
         ),
       ],
@@ -177,97 +262,118 @@ class IncomeDetailsDialog extends StatelessWidget {
   Widget _buildRecurrenceSection(BuildContext context) {
     final settings = income.recurrenceSettings!;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.repeat,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Ricorrenza',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.blue.withOpacity(0.08),
+            Colors.blue.withOpacity(0.12),
           ],
         ),
-        const SizedBox(height: 16),
-        _buildDetailRow(
-          context,
-          'Frequenza',
-          _getRecurrenceTypeLabel(settings.type),
-          Icons.schedule,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.3),
+          width: 1.5,
         ),
-        const SizedBox(height: 12),
-        _buildDetailRow(
-          context,
-          'Livello di necessità',
-          _getNecessityLabel(settings.necessityLevel),
-          _getNecessityIcon(settings.necessityLevel),
-          iconColor: _getNecessityColor(settings.necessityLevel),
-        ),
-        if (settings.endDate != null) ...[
-          const SizedBox(height: 12),
-          _buildDetailRow(
-            context,
-            'Data fine',
-            '${settings.endDate!.day}/${settings.endDate!.month}/${settings.endDate!.year}',
-            Icons.event,
-          ),
-        ],
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.repeat,
+                  size: 18,
+                  color: Colors.blue.shade700,
+                ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Questa entrata si ripete automaticamente secondo la frequenza impostata.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+              const SizedBox(width: 10),
+              Text(
+                'Ricorrenza',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade700,
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          _buildDetailRow(
+            context,
+            'Tipo',
+            _getRecurrenceTypeLabel(settings.type),
+            _getRecurrenceIcon(settings.type),
+            iconColor: Colors.blue,
+          ),
+          const SizedBox(height: 8),
+          _buildDetailRow(
+            context,
+            'Necessità',
+            _getNecessityLabel(settings.necessityLevel),
+            _getNecessityIcon(settings.necessityLevel),
+            iconColor: _getNecessityColor(settings.necessityLevel),
+          ),
+          if (settings.endDate != null) ...[
+            const SizedBox(height: 8),
+            _buildDetailRow(
+              context,
+              'Data Fine',
+              '${settings.endDate!.day}/${settings.endDate!.month}/${settings.endDate!.year}',
+              Icons.event_available,
+              iconColor: Colors.blue,
+            ),
+          ],
+        ],
+      ),
     );
   }
 
   Widget _buildTimestampSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Informazioni sistema',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                size: 18,
+                color: Colors.grey[700],
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Informazioni sistema',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
-        _buildDetailRow(
-          context,
-          'Creato il',
-          '${income.createdAt.day}/${income.createdAt.month}/${income.createdAt.year} alle ${income.createdAt.hour}:${income.createdAt.minute.toString().padLeft(2, '0')}',
-          Icons.access_time,
-        ),
-      ],
+          const SizedBox(height: 12),
+          _buildDetailRow(
+            context,
+            'Creato il',
+            '${income.createdAt.day}/${income.createdAt.month}/${income.createdAt.year} alle ${income.createdAt.hour}:${income.createdAt.minute.toString().padLeft(2, '0')}',
+            Icons.add_circle_outline,
+          ),
+        ],
+      ),
     );
   }
 
@@ -284,7 +390,7 @@ class IncomeDetailsDialog extends StatelessWidget {
         Icon(
           icon,
           size: 20,
-          color: iconColor ?? Theme.of(context).colorScheme.outline,
+          color: iconColor ?? Colors.grey[600],
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -294,7 +400,7 @@ class IncomeDetailsDialog extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
+                  color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -302,7 +408,8 @@ class IncomeDetailsDialog extends StatelessWidget {
               Text(
                 value,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
                 ),
               ),
             ],
@@ -319,13 +426,25 @@ class IncomeDetailsDialog extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: income.source.color.withOpacity(0.1),
+            gradient: LinearGradient(
+              colors: [
+                income.source.color,
+                income.source.color.withOpacity(0.7),
+              ],
+            ),
             borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: income.source.color.withOpacity(0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Icon(
             income.source.icon,
             size: 20,
-            color: income.source.color,
+            color: Colors.white,
           ),
         ),
         const SizedBox(width: 12),
@@ -338,14 +457,16 @@ class IncomeDetailsDialog extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 income.source.displayName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
                 ),
               ),
               Text(
@@ -366,9 +487,14 @@ class IncomeDetailsDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Colors.grey.withOpacity(0.05),
         borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(16),
+          bottom: Radius.circular(20),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.withOpacity(0.15),
+          ),
         ),
       ),
       child: Row(
@@ -376,16 +502,33 @@ class IncomeDetailsDialog extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () => _editIncome(context),
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit, size: 18),
               label: const Text('Modifica'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: () => _duplicateIncome(context),
-              icon: const Icon(Icons.copy),
+              icon: const Icon(Icons.copy, size: 18),
               label: const Text('Duplica'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
             ),
           ),
         ],
@@ -394,7 +537,7 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   void _editIncome(BuildContext context) {
-    Navigator.of(context).pop(); // Chiudi dialog corrente
+    Navigator.of(context).pop();
 
     showDialog(
       context: context,
@@ -415,7 +558,7 @@ class IncomeDetailsDialog extends StatelessWidget {
     final userId = context.currentUserId;
     if (userId == null) return;
 
-    Navigator.of(context).pop(); // Chiudi dialog
+    Navigator.of(context).pop();
 
     context.incomeBloc.add(DuplicateIncomeEvent(
       userId: userId,
@@ -442,6 +585,21 @@ class IncomeDetailsDialog extends StatelessWidget {
         return 'Annuale';
       case RecurrenceType.custom:
         return 'Personalizzata';
+    }
+  }
+
+  IconData _getRecurrenceIcon(RecurrenceType type) {
+    switch (type) {
+      case RecurrenceType.daily:
+        return Icons.today;
+      case RecurrenceType.weekly:
+        return Icons.view_week;
+      case RecurrenceType.monthly:
+        return Icons.calendar_month;
+      case RecurrenceType.yearly:
+        return Icons.calendar_today;
+      case RecurrenceType.custom:
+        return Icons.tune;
     }
   }
 

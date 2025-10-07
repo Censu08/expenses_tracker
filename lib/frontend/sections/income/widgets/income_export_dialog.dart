@@ -26,8 +26,16 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      elevation: 10,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+        constraints: const BoxConstraints(maxWidth: 550, maxHeight: 720),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -58,26 +66,43 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.blue.withOpacity(0.3),
-          ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.withOpacity(0.15),
+            Colors.blue.withOpacity(0.08),
+          ],
+        ),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(20),
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue.shade400,
+                  Colors.blue.shade600,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.file_download,
-              color: Colors.blue,
+              color: Colors.white,
               size: 24,
             ),
           ),
@@ -86,11 +111,13 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Esporta Dati Entrate',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Colors.grey[900],
+                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -107,6 +134,9 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.8),
+            ),
           ),
         ],
       ),
@@ -117,14 +147,21 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Formato Export',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            Icon(Icons.file_present, size: 20, color: Colors.grey[700]),
+            const SizedBox(width: 8),
+            Text(
+              'Formato Export',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -134,18 +171,21 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
               icon: Icons.table_chart,
               label: 'CSV',
               description: 'Excel, Fogli',
+              color: Colors.green,
             ),
             _buildFormatChip(
               format: ExportFormat.json,
               icon: Icons.code,
               label: 'JSON',
               description: 'Dati strutturati',
+              color: Colors.orange,
             ),
             _buildFormatChip(
               format: ExportFormat.report,
               icon: Icons.article,
               label: 'Report',
               description: 'Analisi testuale',
+              color: Colors.purple,
             ),
           ],
         ),
@@ -158,33 +198,48 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
     required IconData icon,
     required String label,
     required String description,
+    required Color color,
   }) {
     final isSelected = _selectedFormat == format;
 
     return InkWell(
       onTap: () => setState(() => _selectedFormat = format),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.blue.withOpacity(0.1)
-              : Colors.grey.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
+          gradient: isSelected
+              ? LinearGradient(
+            colors: [
+              color.withOpacity(0.15),
+              color.withOpacity(0.08),
+            ],
+          )
+              : null,
+          color: isSelected ? null : Colors.grey.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.3),
+            color: isSelected ? color : Colors.grey.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.blue : Colors.grey[600],
-              size: 20,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected ? color.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? color : Colors.grey[600],
+                size: 20,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -193,7 +248,8 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                   label,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.blue : Colors.black,
+                    color: isSelected ? color : Colors.grey[800],
+                    fontSize: 14,
                   ),
                 ),
                 Text(
@@ -205,6 +261,10 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                 ),
               ],
             ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.check_circle, color: color, size: 18),
+            ],
           ],
         ),
       ),
@@ -216,13 +276,29 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
       return const SizedBox.shrink();
     }
 
-    return CheckboxListTile(
-      title: const Text('Raggruppa per Fonte'),
-      subtitle: const Text('Organizza i dati separando ogni fonte'),
-      value: _groupBySource,
-      onChanged: (value) => setState(() => _groupBySource = value ?? true),
-      controlAffinity: ListTileControlAffinity.leading,
-      contentPadding: EdgeInsets.zero,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.2),
+        ),
+      ),
+      child: CheckboxListTile(
+        title: const Text(
+          'Raggruppa per Fonte',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: const Text(
+          'Organizza i dati separando ogni fonte',
+          style: TextStyle(fontSize: 12),
+        ),
+        value: _groupBySource,
+        onChanged: (value) => setState(() => _groupBySource = value ?? true),
+        contentPadding: EdgeInsets.zero,
+        activeColor: Colors.blue,
+      ),
     );
   }
 
@@ -230,87 +306,91 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Periodo (Opzionale)',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(
-              child: _buildDateField(
-                label: 'Da',
-                date: _startDate,
-                onTap: () => _selectDate(context, true),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildDateField(
-                label: 'A',
-                date: _endDate,
-                onTap: () => _selectDate(context, false),
+            Icon(Icons.date_range, size: 20, color: Colors.grey[700]),
+            const SizedBox(width: 8),
+            Text(
+              'Intervallo Date (Opzionale)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
               ),
             ),
           ],
         ),
-        if (_startDate != null || _endDate != null) ...[
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () => setState(() {
-              _startDate = null;
-              _endDate = null;
-            }),
-            icon: const Icon(Icons.clear, size: 16),
-            label: const Text('Cancella date'),
-          ),
-        ],
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateButton(
+                label: 'Data Inizio',
+                date: _startDate,
+                onTap: () => _selectDate(true),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDateButton(
+                label: 'Data Fine',
+                date: _endDate,
+                onTap: () => _selectDate(false),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 
-  Widget _buildDateField({
+  Widget _buildDateButton({
     required String label,
     required DateTime? date,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: date != null ? Colors.purple.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+            width: 1.5,
+          ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  Text(
-                    date != null ? _formatDate(date) : 'Non selezionato',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: date != null ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
               ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: date != null ? Colors.purple : Colors.grey[500],
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  date != null ? _formatDate(date) : 'Non selezionato',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: date != null ? FontWeight.w600 : FontWeight.normal,
+                    color: date != null ? Colors.grey[800] : Colors.grey[500],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -322,42 +402,62 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Filtra per Fonte (Opzionale)',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            Icon(Icons.filter_list, size: 20, color: Colors.grey[700]),
+            const SizedBox(width: 8),
+            Text(
+              'Filtra per Fonte (Opzionale)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<IncomeSource?>(
-          value: _filterSource,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _filterSource != null
+                  ? _filterSource!.color.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.3),
+              width: 1.5,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
-          hint: const Text('Tutte le fonti'),
-          items: [
-            const DropdownMenuItem<IncomeSource?>(
-              value: null,
-              child: Text('Tutte le fonti'),
+          child: DropdownButtonFormField<IncomeSource?>(
+            value: _filterSource,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
-            ...IncomeSource.values.map((source) {
-              return DropdownMenuItem<IncomeSource?>(
-                value: source,
-                child: Row(
-                  children: [
-                    Icon(source.icon, size: 16, color: source.color),
-                    const SizedBox(width: 8),
-                    Text(source.displayName),
-                  ],
-                ),
-              );
-            }),
-          ],
-          onChanged: (value) => setState(() => _filterSource = value),
+            hint: const Text('Tutte le fonti'),
+            items: [
+              const DropdownMenuItem<IncomeSource?>(
+                value: null,
+                child: Text('Tutte le fonti'),
+              ),
+              ...IncomeSource.values.map((source) {
+                return DropdownMenuItem<IncomeSource?>(
+                  value: source,
+                  child: Row(
+                    children: [
+                      Icon(source.icon, size: 18, color: source.color),
+                      const SizedBox(width: 10),
+                      Text(
+                        source.displayName,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+            onChanged: (value) => setState(() => _filterSource = value),
+          ),
         ),
       ],
     );
@@ -365,54 +465,102 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
 
   Widget _buildActions() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.05),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(20),
+        ),
         border: Border(
-          top: BorderSide(color: Colors.grey.withOpacity(0.3)),
+          top: BorderSide(
+            color: Colors.grey.withOpacity(0.15),
+          ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+      child: Column(
         children: [
-          if (_exportedData != null) ...[
-            Expanded(
-              child: Text(
-                'Export completato! Copia negli appunti.',
-                style: TextStyle(
-                  color: Colors.green[700],
-                  fontSize: 12,
+          if (_exportedData != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.3),
                 ),
               ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Export completato! Copia negli appunti.',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _copyToClipboard,
+                    icon: const Icon(Icons.copy, size: 16),
+                    label: const Text('Copia'),
+                  ),
+                ],
+              ),
             ),
-            TextButton.icon(
-              onPressed: _copyToClipboard,
-              icon: const Icon(Icons.copy, size: 16),
-              label: const Text('Copia'),
-            ),
-            const SizedBox(width: 8),
-          ],
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annulla'),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton.icon(
-            onPressed: _isExporting ? null : _handleExport,
-            icon: _isExporting
-                ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-                : const Icon(Icons.download),
-            label: Text(_isExporting ? 'Esportando...' : 'Esporta'),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, size: 18),
+                  label: const Text('Annulla'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey[400]!, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _isExporting ? null : _handleExport,
+                  icon: _isExporting
+                      ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                      : const Icon(Icons.download, size: 18),
+                  label: Text(_isExporting ? 'Esportando...' : 'Esporta'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 3,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+  Future<void> _selectDate(bool isStartDate) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -511,6 +659,6 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }
