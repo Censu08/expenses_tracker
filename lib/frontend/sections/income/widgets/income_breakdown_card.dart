@@ -19,6 +19,7 @@ class IncomeBreakdownCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // ⬅️ FIX: Use minimum space needed
           children: [
             Text(
               'Suddivisione per Categoria',
@@ -26,10 +27,11 @@ class IncomeBreakdownCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16), // ⬅️ FIX: Reduced from 20 to 16
             if (pageState.cachedStats.isEmpty)
               Center(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min, // ⬅️ FIX: Minimum space
                   children: [
                     Icon(
                       Icons.pie_chart_outline,
@@ -42,20 +44,31 @@ class IncomeBreakdownCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               )
             else
-              ...pageState.cachedStats.entries.map((entry) {
-                final totalAmount = pageState.cachedStats.values.fold(0.0, (sum, amount) => sum + amount);
-                final percentage = totalAmount > 0 ? entry.value / totalAmount : 0.0;
-                return _CategoryItem(
-                  categoryId: entry.key,
-                  amount: entry.value,
-                  percentage: percentage,
-                );
-              }).toList(),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true, // ⬅️ FIX: Use only needed space
+                  physics: const NeverScrollableScrollPhysics(), // ⬅️ FIX: Disable internal scroll
+                  padding: EdgeInsets.zero, // ⬅️ FIX: Remove default padding
+                  itemCount: pageState.cachedStats.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 12), // ⬅️ FIX: Spacing between items
+                  itemBuilder: (context, index) {
+                    final entry = pageState.cachedStats.entries.elementAt(index);
+                    final totalAmount = pageState.cachedStats.values.fold(0.0, (sum, amount) => sum + amount);
+                    final percentage = totalAmount > 0 ? entry.value / totalAmount : 0.0;
+                    return _CategoryItem(
+                      categoryId: entry.key,
+                      amount: entry.value,
+                      percentage: percentage,
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ),
@@ -100,62 +113,71 @@ class _CategoryItem extends StatelessWidget {
         final categoryName = category.description;
         final categoryColor = category.color;
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Usa LayoutBuilder per adattarsi allo spazio disponibile
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  // Se lo spazio è molto ristretto, nascondi l'icona
-                  final showIcon = constraints.maxWidth > 100;
-
-                  return Row(
-                    children: [
-                      if (showIcon) ...[
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: categoryColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                      Expanded(
-                        child: Text(
-                          categoryName,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          '€ ${amount.toStringAsFixed(2)}',
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+        // ⬅️ FIX: Removed outer Padding, using intrinsic sizes
+        return Column(
+          mainAxisSize: MainAxisSize.min, // ⬅️ FIX: Minimum space needed
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row with category name and amount
+            Row(
+              children: [
+                // Color indicator
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: categoryColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Category name
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    categoryName,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13, // ⬅️ FIX: Explicit size
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Amount
+                Text(
+                  '€${amount.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13, // ⬅️ FIX: Explicit size
+                  ),
+                ),
+                const SizedBox(width: 4),
+                // Percentage
+                Text(
+                  '${(percentage * 100).toStringAsFixed(0)}%',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                    fontSize: 11, // ⬅️ FIX: Smaller percentage
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6), // ⬅️ FIX: Reduced from 8 to 6
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 6, // ⬅️ FIX: Explicit height for progress bar
+                child: LinearProgressIndicator(
+                  value: percentage,
+                  backgroundColor: categoryColor.withOpacity(0.2),
+                  valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
+                ),
               ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: percentage,
-                backgroundColor: categoryColor.withOpacity(0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

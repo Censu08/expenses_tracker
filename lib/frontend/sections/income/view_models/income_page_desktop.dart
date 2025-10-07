@@ -7,6 +7,7 @@ import '../widgets/income_summary_card.dart';
 import '../widgets/income_breakdown_card.dart';
 import '../widgets/recent_income_card.dart';
 import '../widgets/period_selector.dart';
+import '../widgets/income_source_analytics_button.dart';
 
 class IncomePageDesktop extends StatelessWidget {
   final IncomePageState pageState;
@@ -23,8 +24,11 @@ class IncomePageDesktop extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Selettore periodo
           PeriodSelector(pageState: pageState),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // Filtro fonti
           IncomeSourceFilter(
             selectedSource: pageState.selectedSource,
             onSourceSelected: (source) {
@@ -35,21 +39,33 @@ class IncomePageDesktop extends StatelessWidget {
             },
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // Layout principale espandibile
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Colonna sinistra: Summary + Breakdown
                 Expanded(
                   flex: 1,
                   child: Column(
                     children: [
                       IncomeSummaryCard(pageState: pageState),
                       SizedBox(height: ResponsiveUtils.getSpacing(context)),
-                      Expanded(child: IncomeBreakdownCard(pageState: pageState)),
+
+                      // ⬅️ NUOVO: Bottone Analisi Fonti (apre dialog)
+                      IncomeSourceAnalyticsButton(pageState: pageState),
+                      SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+                      Expanded(
+                        child: IncomeBreakdownCard(pageState: pageState),
+                      ),
                     ],
                   ),
                 ),
                 SizedBox(width: ResponsiveUtils.getSpacing(context)),
+
+                // Colonna destra: Lista entrate
                 Expanded(
                   flex: 2,
                   child: RecentIncomeCard(pageState: pageState),

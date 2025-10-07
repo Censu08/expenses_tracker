@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../core/utils/income_export_helper.dart';
 import '../models/income/income_model.dart';
 import '../models/income/income_source_enum.dart';
 import '../repositories/income_repository.dart';
@@ -578,6 +579,138 @@ class IncomeController {
     }
   }
 
+  Future<String> exportIncomesToCSV({
+    required String userId,
+    bool groupBySource = false,
+    DateTime? startDate,
+    DateTime? endDate,
+    IncomeSource? filterSource,
+  }) async {
+    try {
+      _validateUserId(userId);
+
+      final incomes = await _incomeRepository.getUserIncomes(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final filteredIncomes = filterSource != null
+          ? incomes.where((i) => i.source == filterSource).toList()
+          : incomes;
+
+      debugPrint('Exporting ${filteredIncomes.length} incomes to CSV');
+
+      return IncomeExportHelper.exportToCSV(
+        incomes: filteredIncomes,
+        groupBySource: groupBySource,
+      );
+    } catch (e) {
+      debugPrint('Error exporting to CSV: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> exportIncomesToJSON({
+    required String userId,
+    bool groupBySource = false,
+    DateTime? startDate,
+    DateTime? endDate,
+    IncomeSource? filterSource,
+  }) async {
+    try {
+      _validateUserId(userId);
+
+      final incomes = await _incomeRepository.getUserIncomes(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final filteredIncomes = filterSource != null
+          ? incomes.where((i) => i.source == filterSource).toList()
+          : incomes;
+
+      debugPrint('Exporting ${filteredIncomes.length} incomes to JSON');
+
+      return IncomeExportHelper.exportToJSON(
+        incomes: filteredIncomes,
+        groupBySource: groupBySource,
+      );
+    } catch (e) {
+      debugPrint('Error exporting to JSON: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> generateSourceAnalyticsReport({
+    required String userId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      _validateUserId(userId);
+
+      final sourceStats = await _incomeRepository.getIncomeStatsBySource(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final score = IncomeSourceHelper.calculateDiversificationScore(sourceStats);
+
+      debugPrint('Generating analytics report for ${sourceStats.length} sources');
+
+      return IncomeExportHelper.generateSourceReport(
+        sourceStats: sourceStats,
+        diversificationScore: score,
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      debugPrint('Error generating report: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getExportMetadata({
+    required String userId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      _validateUserId(userId);
+
+      final incomes = await _incomeRepository.getUserIncomes(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final sourceStats = await _incomeRepository.getIncomeStatsBySource(
+        userId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final totalAmount = incomes.fold(0.0, (sum, i) => sum + i.amount);
+
+      return {
+        'total_incomes': incomes.length,
+        'total_amount': totalAmount,
+        'sources_count': sourceStats.length,
+        'date_range': {
+          'start': startDate?.toIso8601String(),
+          'end': endDate?.toIso8601String(),
+        },
+        'export_date': DateTime.now().toIso8601String(),
+      };
+    } catch (e) {
+      debugPrint('Error getting export metadata: $e');
+      rethrow;
+    }
+  }
+
   // ==============================================================================
   // VALIDAZIONI PRIVATE
   // ==============================================================================
@@ -686,5 +819,31 @@ class IncomeController {
       debugPrint('Errore nel recupero categoria: $e');
       return null;
     }
+  }
+}
+
+class IncomeSourceHelper {
+  static int calculateDiversificationScore(Map<IncomeSource, double> sourceStats) {
+    if (sourceStats.isEmpty) return 0;
+    if (sourceStats.length == 1) return 20;
+
+    final totalAmount = sourceStats.values.fold(0.0, (sum, amount) => sum + amount);
+    if (totalAmount == 0) return 0;
+
+    double herfindahlIndex = 0;
+    for (var amount in sourceStats.values) {
+      final share = amount / totalAmount;
+      herfindahlIndex += share * share;
+    }
+
+    final normalizedHHI = (herfindahlIndex - (1 / sourceStats.length)) /
+        (1 - (1 / sourceStats.length));
+
+    final diversificationScore = ((1 - normalizedHHI) * 100).round();
+
+    final sourceBonus = (sourceStats.length - 1) * 5;
+    final finalScore = (diversificationScore + sourceBonus).clamp(0, 100);
+
+    return finalScore;
   }
 }

@@ -7,6 +7,7 @@ import '../widgets/income_summary_card.dart';
 import '../widgets/income_breakdown_card.dart';
 import '../widgets/recent_income_card.dart';
 import '../widgets/period_selector.dart';
+import '../widgets/income_source_analytics_button.dart';
 
 class IncomePageMobile extends StatelessWidget {
   final IncomePageState pageState;
@@ -23,8 +24,11 @@ class IncomePageMobile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Selettore periodo
           PeriodSelector(pageState: pageState),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // Filtro fonti
           IncomeSourceFilter(
             selectedSource: pageState.selectedSource,
             onSourceSelected: (source) {
@@ -35,10 +39,20 @@ class IncomePageMobile extends StatelessWidget {
             },
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // Riepilogo totali
           IncomeSummaryCard(pageState: pageState),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // ⬅️ NUOVO: Bottone Analisi Fonti (apre dialog)
+          IncomeSourceAnalyticsButton(pageState: pageState),
+          SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // Suddivisione per categoria
           IncomeBreakdownCard(pageState: pageState),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
+          // Lista entrate recenti
           SizedBox(
             height: 400,
             child: RecentIncomeCard(pageState: pageState),
