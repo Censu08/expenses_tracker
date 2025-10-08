@@ -20,16 +20,6 @@ class IncomePageDesktop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.background,
-            Theme.of(context).colorScheme.primary.withOpacity(0.02),
-          ],
-        ),
-      ),
       child: Column(
         children: [
           Padding(
@@ -41,7 +31,12 @@ class IncomePageDesktop extends StatelessWidget {
             ),
             child: Column(
               children: [
-                PeriodSelector(pageState: pageState),
+                Row(
+                  children: [
+                    Expanded(flex: 1, child: PeriodSelector(pageState: pageState)),
+                    Expanded(flex: 3, child: IncomeSourceAnalyticsButton(pageState: pageState)),
+                  ],
+                ),
                 SizedBox(height: ResponsiveUtils.getSpacing(context)),
                 IncomeSourceFilter(
                   selectedSource: pageState.selectedSource,
@@ -72,8 +67,6 @@ class IncomePageDesktop extends StatelessWidget {
                             key: ValueKey('summary_${pageState.selectedSource?.toString() ?? 'all'}'),
                             pageState: pageState,
                           ),
-                          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-                          IncomeSourceAnalyticsButton(pageState: pageState),
                           SizedBox(height: ResponsiveUtils.getSpacing(context)),
                           SizedBox(
                             height: 400,

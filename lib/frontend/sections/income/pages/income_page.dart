@@ -21,13 +21,7 @@ class IncomePage extends StatefulWidget {
 class IncomePageState extends State<IncomePage> {
   String selectedPeriod = 'Quest\'Anno';
   IncomeSource? selectedSource;
-  final List<String> periods = [
-    'Questa Settimana',
-    'Questo Mese',
-    'Ultimi 3 Mesi',
-    'Quest\'Anno',
-    'Tutto',
-  ];
+  final List<String> periods = ['Questa Settimana', 'Questo Mese', 'Ultimi 3 Mesi', 'Quest\'Anno', 'Tutto'];
 
   bool hasInitialized = false;
   List<IncomeModel> cachedIncomes = [];
@@ -44,26 +38,38 @@ class IncomePageState extends State<IncomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: RefreshableWidget(
-        onRefresh: () async {
-          IncomePageFunctions.loadIncomeData(context, this);
-          await Future.delayed(const Duration(milliseconds: 500));
-        },
-        child: _buildResponsiveBody(),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.background,
+            Theme.of(context).colorScheme.primary.withOpacity(0.02),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => IncomePageFunctions.showAddIncomeDialog(context, this),
-        icon: const Icon(Icons.add),
-        label: const Text('Nuova Entrata'),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: _buildAppBar(),
+        body: RefreshableWidget(
+          onRefresh: () async {
+            IncomePageFunctions.loadIncomeData(context, this);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: _buildResponsiveBody(),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => IncomePageFunctions.showAddIncomeDialog(context, this),
+          icon: const Icon(Icons.add),
+          label: const Text('Nuova Entrata'),
+        ),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text('Entrate'),
       actions: [
         IconButton(
           icon: const Icon(Icons.download),
@@ -76,32 +82,18 @@ class IncomePageState extends State<IncomePage> {
           itemBuilder: (context) => [
             const PopupMenuItem(
               value: 'tools',
-              child: Row(
-                children: [
-                  Icon(Icons.build, size: 20),
-                  SizedBox(width: 12),
-                  Text('Strumenti'),
-                ],
-              ),
+              child: Row(children: [Icon(Icons.build, size: 20), SizedBox(width: 12), Text('Strumenti')]),
             ),
             const PopupMenuItem(
               value: 'export',
               child: Row(
-                children: [
-                  Icon(Icons.file_download, size: 20),
-                  SizedBox(width: 12),
-                  Text('Esporta'),
-                ],
+                children: [Icon(Icons.file_download, size: 20), SizedBox(width: 12), Text('Esporta')],
               ),
             ),
             const PopupMenuItem(
               value: 'recategorize',
               child: Row(
-                children: [
-                  Icon(Icons.edit_note, size: 20),
-                  SizedBox(width: 12),
-                  Text('Re-categorizzazione'),
-                ],
+                children: [Icon(Icons.edit_note, size: 20), SizedBox(width: 12), Text('Re-categorizzazione')],
               ),
             ),
           ],
@@ -135,27 +127,14 @@ class IncomePageState extends State<IncomePage> {
   }
 
   void _showExportDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const IncomeExportDialog(),
-    );
+    showDialog(context: context, builder: (context) => const IncomeExportDialog());
   }
 
   void _navigateToTools() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const IncomeToolsMenu(),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const IncomeToolsMenu()));
   }
 
   void _navigateToRecategorize() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BatchRecategorizeIncomePage(),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const BatchRecategorizeIncomePage()));
   }
 }
