@@ -1,3 +1,4 @@
+import 'package:expenses_tracker/core/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import '../../../themes/app_theme.dart';
 import '../pages/income_page.dart';
@@ -54,17 +55,19 @@ class _PeriodSelectorState extends State<PeriodSelector> {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.medium),
-                  Text(
-                    'Periodo:',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.large),
+                  ResponsiveUtils.isDesktop(context) ?
+                    Text(
+                      'Periodo:',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      ),
+                    ) : SizedBox.shrink(),
+
                   Expanded(
                     child: Container(
+                      margin: const EdgeInsets.only(left: AppSpacing.small),
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary.withOpacity(0.08),

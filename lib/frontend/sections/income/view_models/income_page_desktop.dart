@@ -19,79 +19,77 @@ class IncomePageDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              ResponsiveUtils.getPagePadding(context).left,
-              ResponsiveUtils.getPagePadding(context).top,
-              ResponsiveUtils.getPagePadding(context).right,
-              ResponsiveUtils.getSpacing(context),
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            ResponsiveUtils.getPagePadding(context).left,
+            ResponsiveUtils.getPagePadding(context).top,
+            ResponsiveUtils.getPagePadding(context).right,
+            ResponsiveUtils.getSpacing(context),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(flex: 1, child: PeriodSelector(pageState: pageState)),
+                  Expanded(flex: 3, child: IncomeSourceAnalyticsButton(pageState: pageState)),
+                ],
+              ),
+              SizedBox(height: ResponsiveUtils.getSpacing(context)),
+              IncomeSourceFilter(
+                selectedSource: pageState.selectedSource,
+                onSourceSelected: (source) {
+                  pageState.setState(() {
+                    pageState.selectedSource = source;
+                  });
+                  IncomePageFunctions.loadIncomeData(context, pageState);
+                },
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.getPagePadding(context).left,
             ),
-            child: Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(flex: 1, child: PeriodSelector(pageState: pageState)),
-                    Expanded(flex: 3, child: IncomeSourceAnalyticsButton(pageState: pageState)),
-                  ],
+                Expanded(
+                  flex: 3,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        IncomeSummaryCard(
+                          key: ValueKey('summary_${pageState.selectedSource?.toString() ?? 'all'}'),
+                          pageState: pageState,
+                        ),
+                        SizedBox(height: ResponsiveUtils.getSpacing(context)),
+                        SizedBox(
+                          height: 400,
+                          child: IncomeBreakdownCard(
+                            key: ValueKey('breakdown_${pageState.selectedSource?.toString() ?? 'all'}'),
+                            pageState: pageState,
+                          ),
+                        ),
+                        SizedBox(height: ResponsiveUtils.getSpacing(context)),
+                      ],
+                    ),
+                  ),
                 ),
-                SizedBox(height: ResponsiveUtils.getSpacing(context)),
-                IncomeSourceFilter(
-                  selectedSource: pageState.selectedSource,
-                  onSourceSelected: (source) {
-                    pageState.setState(() {
-                      pageState.selectedSource = source;
-                    });
-                    IncomePageFunctions.loadIncomeData(context, pageState);
-                  },
+                SizedBox(width: ResponsiveUtils.getSpacing(context) * 1.5),
+                Expanded(
+                  flex: 4,
+                  key: ValueKey('recent_${pageState.selectedSource?.toString() ?? 'all'}'),
+                  child: RecentIncomeCard(pageState: pageState),
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.getPagePadding(context).left,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          IncomeSummaryCard(
-                            key: ValueKey('summary_${pageState.selectedSource?.toString() ?? 'all'}'),
-                            pageState: pageState,
-                          ),
-                          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-                          SizedBox(
-                            height: 400,
-                            child: IncomeBreakdownCard(
-                              key: ValueKey('breakdown_${pageState.selectedSource?.toString() ?? 'all'}'),
-                              pageState: pageState,
-                            ),
-                          ),
-                          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: ResponsiveUtils.getSpacing(context) * 1.5),
-                  Expanded(
-                    flex: 4,
-                    key: ValueKey('recent_${pageState.selectedSource?.toString() ?? 'all'}'),
-                    child: RecentIncomeCard(pageState: pageState),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

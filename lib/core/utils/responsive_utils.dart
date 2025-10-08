@@ -3,22 +3,21 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ResponsiveUtils {
-  // Breakpoint per diverse dimensioni schermo
   static const double mobileBreakpoint = 600;
   static const double tabletBreakpoint = 900;
-  static const double desktopBreakpoint = 1200;
+  static const double desktopBreakpoint = 1450;
 
   static bool isMobile(BuildContext context) {
-    return MediaQuery.of(context).size.width < mobileBreakpoint;
+    return MediaQuery.of(context).size.width < tabletBreakpoint;
   }
 
   static bool isTablet(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    return width >= mobileBreakpoint && width < tabletBreakpoint;
+    return width >= mobileBreakpoint && width < desktopBreakpoint;
   }
 
   static bool isDesktop(BuildContext context) {
-    return MediaQuery.of(context).size.width >= tabletBreakpoint;
+    return MediaQuery.of(context).size.width >= desktopBreakpoint;
   }
 
   static bool isDesktopPlatform() {
@@ -29,8 +28,6 @@ class ResponsiveUtils {
       return false;
     }
   }
-
-  // Rimosso getGridCrossAxisCount perché ora usiamo layout specifici per dispositivo
 
   static EdgeInsets getPagePadding(BuildContext context) {
     if (isMobile(context)) return const EdgeInsets.all(16.0);
@@ -45,6 +42,6 @@ class ResponsiveUtils {
   }
 
   static double getCardBorderRadius(BuildContext context) {
-    return 12.0; // Uniforme per tutte le piattaforme
+    return 12.0;
   }
 }

@@ -24,11 +24,12 @@ class IncomePageMobile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Selettore periodo
           PeriodSelector(pageState: pageState),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // Filtro fonti
+          IncomeSourceAnalyticsButton(pageState: pageState),
+          SizedBox(height: ResponsiveUtils.getSpacing(context)),
+
           IncomeSourceFilter(
             selectedSource: pageState.selectedSource,
             onSourceSelected: (source) {
@@ -40,19 +41,15 @@ class IncomePageMobile extends StatelessWidget {
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // Riepilogo totali
           IncomeSummaryCard(pageState: pageState),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // ⬅️ NUOVO: Bottone Analisi Fonti (apre dialog)
-          IncomeSourceAnalyticsButton(pageState: pageState),
+          SizedBox(
+            height: 350,
+            child: IncomeBreakdownCard(pageState: pageState),
+          ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // Suddivisione per categoria
-          IncomeBreakdownCard(pageState: pageState),
-          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-
-          // Lista entrate recenti
           SizedBox(
             height: 400,
             child: RecentIncomeCard(pageState: pageState),

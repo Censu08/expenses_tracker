@@ -24,11 +24,21 @@ class IncomePageTablet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Selettore periodo
-          PeriodSelector(pageState: pageState),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: PeriodSelector(pageState: pageState),
+              ),
+              SizedBox(width: ResponsiveUtils.getSpacing(context)),
+              Expanded(
+                flex: 3,
+                child: IncomeSourceAnalyticsButton(pageState: pageState),
+              ),
+            ],
+          ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // Filtro fonti
           IncomeSourceFilter(
             selectedSource: pageState.selectedSource,
             onSourceSelected: (source) {
@@ -40,28 +50,25 @@ class IncomePageTablet extends StatelessWidget {
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // Prima riga: Summary + Breakdown
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: IncomeSummaryCard(pageState: pageState),
               ),
               SizedBox(width: ResponsiveUtils.getSpacing(context)),
               Expanded(
-                flex: 1,
-                child: IncomeBreakdownCard(pageState: pageState),
+                flex: 2,
+                child: SizedBox(
+                  height: 400,
+                  child: IncomeBreakdownCard(pageState: pageState),
+                ),
               ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
-          // ⬅️ NUOVO: Bottone Analisi Fonti (apre dialog)
-          IncomeSourceAnalyticsButton(pageState: pageState),
-          SizedBox(height: ResponsiveUtils.getSpacing(context)),
-
-          // Lista entrate recenti
           SizedBox(
             height: 500,
             child: RecentIncomeCard(pageState: pageState),
