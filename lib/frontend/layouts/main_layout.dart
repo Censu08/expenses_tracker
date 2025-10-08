@@ -1,4 +1,7 @@
 import 'package:expenses_tracker/frontend/sections/income/pages/income_page.dart';
+import 'package:expenses_tracker/frontend/sections/income/widgets/income_export_dialog.dart';
+import 'package:expenses_tracker/frontend/sections/income/widgets/batch_recategorize_income_page.dart';
+import 'package:expenses_tracker/frontend/sections/income/widgets/income_tools_menu.dart';
 import 'package:flutter/material.dart';
 import '../../core/utils/responsive_utils.dart';
 import '../pages/dashboard_page.dart';
@@ -17,7 +20,7 @@ class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
   bool _isRailExtended = true;
 
-  final List<NavigationItem> _navigationItems = [
+  List<NavigationItem> get _navigationItems => [
     NavigationItem(
       icon: Icons.dashboard,
       label: 'Dashboard',
@@ -27,6 +30,35 @@ class _MainLayoutState extends State<MainLayout> {
       icon: Icons.trending_up,
       label: 'Entrate',
       page: IncomePage(),
+      appBarActions: (context) => [
+        IconButton(
+          icon: const Icon(Icons.download),
+          onPressed: () => _showIncomeExportDialog(context),
+          tooltip: 'Esporta Dati',
+        ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (action) => _handleIncomeMenuAction(context, action),
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'tools',
+              child: Row(children: [Icon(Icons.build, size: 20), SizedBox(width: 12), Text('Strumenti')]),
+            ),
+            const PopupMenuItem(
+              value: 'export',
+              child: Row(
+                children: [Icon(Icons.file_download, size: 20), SizedBox(width: 12), Text('Esporta')],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'recategorize',
+              child: Row(
+                children: [Icon(Icons.edit_note, size: 20), SizedBox(width: 12), Text('Re-categorizzazione')],
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
     NavigationItem(
       icon: Icons.swap_horiz,
@@ -55,6 +87,33 @@ class _MainLayoutState extends State<MainLayout> {
     ),
   ];
 
+  void _showIncomeExportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const IncomeExportDialog(),
+    );
+  }
+
+  void _handleIncomeMenuAction(BuildContext context, String action) {
+    switch (action) {
+      case 'tools':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const IncomeToolsMenu()),
+        );
+        break;
+      case 'export':
+        _showIncomeExportDialog(context);
+        break;
+      case 'recategorize':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const BatchRecategorizeIncomePage()),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (ResponsiveUtils.isMobile(context)) {
@@ -65,11 +124,15 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   Widget _buildMobileLayout() {
+    final currentItem = _navigationItems[_selectedIndex];
+    final customActions = currentItem.appBarActions?.call(context) ?? [];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_navigationItems[_selectedIndex].label),
+        title: Text(currentItem.label),
         centerTitle: true,
         actions: [
+          ...customActions,
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
@@ -81,7 +144,7 @@ class _MainLayoutState extends State<MainLayout> {
         ],
       ),
       drawer: _buildDrawer(),
-      body: _navigationItems[_selectedIndex].page,
+      body: currentItem.page,
     );
   }
 
@@ -211,6 +274,9 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   Widget _buildDesktopAppBar() {
+    final currentItem = _navigationItems[_selectedIndex];
+    final customActions = currentItem.appBarActions?.call(context) ?? [];
+
     return Container(
       height: 64,
       decoration: BoxDecoration(
@@ -228,7 +294,7 @@ class _MainLayoutState extends State<MainLayout> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                _navigationItems[_selectedIndex].label,
+                currentItem.label,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -237,6 +303,8 @@ class _MainLayoutState extends State<MainLayout> {
           ),
           Row(
             children: [
+              ...customActions,
+              if (customActions.isNotEmpty) const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
                 onPressed: () {},
@@ -261,10 +329,12 @@ class NavigationItem {
   final IconData icon;
   final String label;
   final Widget page;
+  final List<Widget> Function(BuildContext)? appBarActions;
 
   const NavigationItem({
     required this.icon,
     required this.label,
     required this.page,
+    this.appBarActions,
   });
 }

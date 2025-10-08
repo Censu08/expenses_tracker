@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ResponsiveUtils {
   static const double mobileBreakpoint = 600;
-  static const double tabletBreakpoint = 900;
+  static const double tabletBreakpoint = 950;
   static const double desktopBreakpoint = 1450;
 
   static bool isMobile(BuildContext context) {

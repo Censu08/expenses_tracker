@@ -4,7 +4,7 @@ import '../functions/income_page_functions.dart';
 import '../pages/income_page.dart';
 import '../widgets/income_source_filter.dart';
 import '../widgets/income_summary_card.dart';
-import '../widgets/income_breakdown_card.dart';
+import '../widgets/income_source_breakdown_card.dart';
 import '../widgets/recent_income_card.dart';
 import '../widgets/period_selector.dart';
 import '../widgets/income_source_analytics_button.dart';
@@ -68,9 +68,9 @@ class IncomePageDesktop extends StatelessWidget {
                         ),
                         SizedBox(height: ResponsiveUtils.getSpacing(context)),
                         SizedBox(
-                          height: 400,
-                          child: IncomeBreakdownCard(
-                            key: ValueKey('breakdown_${pageState.selectedSource?.toString() ?? 'all'}'),
+                          height: 500,
+                          child: RecentIncomeCard(
+                            key: ValueKey('recent_${pageState.selectedSource?.toString() ?? 'all'}'),
                             pageState: pageState,
                           ),
                         ),
@@ -82,8 +82,10 @@ class IncomePageDesktop extends StatelessWidget {
                 SizedBox(width: ResponsiveUtils.getSpacing(context) * 1.5),
                 Expanded(
                   flex: 4,
-                  key: ValueKey('recent_${pageState.selectedSource?.toString() ?? 'all'}'),
-                  child: RecentIncomeCard(pageState: pageState),
+                  child: IncomeSourceBreakdownCard(
+                    key: ValueKey('breakdown_${pageState.selectedSource?.toString() ?? 'all'}'),
+                    pageState: pageState,
+                  ),
                 ),
               ],
             ),

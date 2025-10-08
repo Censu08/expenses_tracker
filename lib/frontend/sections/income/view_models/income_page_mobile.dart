@@ -4,7 +4,7 @@ import '../functions/income_page_functions.dart';
 import '../pages/income_page.dart';
 import '../widgets/income_source_filter.dart';
 import '../widgets/income_summary_card.dart';
-import '../widgets/income_breakdown_card.dart';
+import '../widgets/income_source_breakdown_card.dart';
 import '../widgets/recent_income_card.dart';
 import '../widgets/period_selector.dart';
 import '../widgets/income_source_analytics_button.dart';
@@ -45,8 +45,8 @@ class IncomePageMobile extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 
           SizedBox(
-            height: 350,
-            child: IncomeBreakdownCard(pageState: pageState),
+            height: 450,
+            child: IncomeSourceBreakdownCard(pageState: pageState),
           ),
           SizedBox(height: ResponsiveUtils.getSpacing(context)),
 

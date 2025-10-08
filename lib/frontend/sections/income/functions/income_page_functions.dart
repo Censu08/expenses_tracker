@@ -13,13 +13,13 @@ class IncomePageFunctions {
   static void loadIncomeData(BuildContext context, IncomePageState pageState) {
     final userId = context.currentUserId;
     if (userId == null) {
-      debugPrint('❌ [IncomePage] userId is NULL! Cannot load incomes.');
+      debugPrint('userId is NULL! Cannot load incomes.');
       return;
     }
 
-    debugPrint('🔍 [IncomePage] Loading data for userId: $userId');
+    debugPrint('Loading data for userId: $userId');
     final (startDate, endDate) = getDateRangeForPeriod(pageState.selectedPeriod);
-    debugPrint('🔍 [IncomePage] Date range: $startDate to $endDate');
+    debugPrint('Date range: $startDate to $endDate');
 
     context.categoryBloc.add(LoadAllUserCategoriesEvent(
       userId: userId,
