@@ -8,6 +8,7 @@ import '../../../../backend/models/category_model.dart';
 import '../../../../backend/models/income/income_model.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
 import '../../../../backend/models/recurrence_model.dart';
+import '../../../themes/app_theme.dart';
 import 'income_source_selector.dart';
 
 class AddIncomeForm extends StatefulWidget {
@@ -104,19 +105,21 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
       ),
-      elevation: 10,
+      elevation: AppElevations.dialog,
       child: Container(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.85,
           maxWidth: 650,
         ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
+          color: isDark ? AppColors.surfaceDark : Colors.white,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -124,20 +127,20 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xLarge),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildAmountField(),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpacing.large),
                       _buildDescriptionField(),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpacing.large),
                       _buildSourceSelector(),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpacing.large),
                       _buildDateSelector(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xLarge),
                       _buildRecurrenceSection(),
                     ],
                   ),
@@ -152,40 +155,38 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: isDark
+            ? LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.green.withOpacity(0.15),
-            Colors.green.withOpacity(0.08),
+            AppColors.successDark.withOpacity(0.15),
+            AppColors.successDark.withOpacity(0.08),
+          ],
+        )
+            : LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.success.withOpacity(0.15),
+            AppColors.success.withOpacity(0.08),
           ],
         ),
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppBorderRadius.xLarge),
         ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.green.shade400,
-                  Colors.green.shade600,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+            decoration: IncomeTheme.getIconContainerDecoration(
+              isDark ? AppColors.successDark : AppColors.success,
             ),
             child: Icon(
               widget.initialIncome == null ? Icons.add_circle : Icons.edit,
@@ -193,22 +194,18 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
               size: 24,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.medium),
           Expanded(
             child: Text(
               widget.initialIncome == null ? 'Nuova Entrata' : 'Modifica Entrata',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-                color: Colors.grey[900],
-              ),
+              style: IncomeTheme.getCardTitleStyle(context),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.of(context).pop(),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.8),
+              backgroundColor: (isDark ? AppColors.surfaceDark : Colors.white).withOpacity(0.8),
             ),
           ),
         ],
@@ -217,12 +214,15 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildAmountField() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final successColor = isDark ? AppColors.successDark : AppColors.success;
+
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.1),
+            color: successColor.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -232,43 +232,21 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
         controller: _amountController,
         decoration: InputDecoration(
           labelText: 'Importo',
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             fontWeight: FontWeight.w600,
-            color: Colors.green,
+            color: successColor,
           ),
           prefixIcon: Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.green.shade400,
-                  Colors.green.shade600,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            margin: const EdgeInsets.all(AppSpacing.small),
+            padding: const EdgeInsets.all(AppSpacing.small),
+            decoration: IncomeTheme.getIconContainerDecoration(successColor),
             child: const Icon(Icons.euro, color: Colors.white, size: 20),
           ),
           suffixText: '€',
           suffixStyle: TextStyle(
-            color: Colors.green.shade700,
+            color: successColor,
             fontWeight: FontWeight.bold,
             fontSize: 16,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.green.withOpacity(0.3), width: 2),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.green.withOpacity(0.3), width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Colors.green, width: 2),
           ),
         ),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -278,7 +256,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Colors.green.shade700,
+          color: successColor,
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -295,36 +273,25 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildDescriptionField() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return TextFormField(
       controller: _descriptionController,
       decoration: InputDecoration(
         labelText: 'Descrizione',
-        labelStyle: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Colors.grey[700],
-        ),
+        labelStyle: IncomeTheme.getLabelTextStyle(context),
         prefixIcon: Container(
-          margin: const EdgeInsets.all(8),
-          padding: const EdgeInsets.all(8),
+          margin: const EdgeInsets.all(AppSpacing.small),
+          padding: const EdgeInsets.all(AppSpacing.small),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.15),
+            color: AppColors.secondary.withOpacity(0.15),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(Icons.description, color: Colors.blue, size: 20),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3), width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3), width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
+          child: Icon(
+            Icons.description,
+            color: isDark ? AppColors.secondaryDark : AppColors.secondary,
+            size: 20,
+          ),
         ),
       ),
       maxLength: 100,
@@ -347,13 +314,9 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
       children: [
         Text(
           'Fonte di Reddito',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+          style: IncomeTheme.getLabelTextStyle(context),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.small),
         CompactIncomeSourceSelector(
           selectedSource: _selectedSource,
           onChanged: (source) => setState(() => _selectedSource = source),
@@ -363,41 +326,43 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildDateSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: _selectDate,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppBorderRadius.medium),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.large),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.medium),
           border: Border.all(
-            color: Colors.purple.withOpacity(0.3),
+            color: AppColors.accent.withOpacity(0.3),
             width: 1.5,
           ),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.small),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.15),
+                color: AppColors.accent.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.calendar_today, color: Colors.purple, size: 20),
+              child: Icon(
+                Icons.calendar_today,
+                color: isDark ? AppColors.accentDark : AppColors.accent,
+                size: 20,
+              ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.medium),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Data',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: IncomeTheme.getLabelTextStyle(context),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -405,13 +370,16 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
+            Icon(
+              Icons.arrow_drop_down,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -419,18 +387,21 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildRecurrenceSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.05),
-            Colors.blue.withOpacity(0.08),
+            secondaryColor.withOpacity(0.05),
+            secondaryColor.withOpacity(0.08),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         border: Border.all(
-          color: _isRecurring ? Colors.blue.withOpacity(0.4) : Colors.grey.withOpacity(0.2),
+          color: _isRecurring ? secondaryColor.withOpacity(0.4) : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.2),
           width: _isRecurring ? 2 : 1,
         ),
       ),
@@ -440,25 +411,25 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.small),
                 decoration: BoxDecoration(
-                  color: _isRecurring ? Colors.blue.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
+                  color: _isRecurring ? secondaryColor.withOpacity(0.2) : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.repeat,
-                  color: _isRecurring ? Colors.blue : Colors.grey[600],
+                  color: _isRecurring ? secondaryColor : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.medium),
               Expanded(
                 child: Text(
                   'Entrata Ricorrente',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: _isRecurring ? Colors.blue.shade700 : Colors.grey[700],
+                    color: _isRecurring ? secondaryColor : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
                   ),
                 ),
               ),
@@ -467,20 +438,18 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                 child: Switch(
                   value: _isRecurring,
                   onChanged: (value) => setState(() => _isRecurring = value),
-                  activeColor: Colors.blue,
+                  activeColor: secondaryColor,
                 ),
               ),
             ],
           ),
           if (_isRecurring) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.large),
             DropdownButtonFormField<RecurrenceType>(
               decoration: InputDecoration(
                 labelText: 'Frequenza',
-                filled: true,
-                fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 ),
               ),
               value: _recurrenceType,
@@ -496,14 +465,12 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                 }
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.large),
             DropdownButtonFormField<NecessityLevel>(
               decoration: InputDecoration(
                 labelText: 'Livello di necessità',
-                filled: true,
-                fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 ),
               ),
               value: _necessityLevel,
@@ -517,7 +484,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                         color: _getNecessityColor(level),
                         size: 20,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.small),
                       Text(_getNecessityLabel(level)),
                     ],
                   ),
@@ -529,15 +496,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                 }
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.large),
             InkWell(
               onTap: _selectEndDate,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppBorderRadius.medium),
               child: InputDecorator(
                 decoration: InputDecoration(
                   labelText: 'Data fine (opzionale)',
-                  filled: true,
-                  fillColor: Colors.white,
                   prefixIcon: const Icon(Icons.event),
                   suffixIcon: _endDate != null
                       ? IconButton(
@@ -546,7 +511,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                   )
                       : null,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                   ),
                 ),
                 child: Text(
@@ -554,7 +519,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                       ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
                       : 'Nessuna data di fine',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: _endDate != null ? Colors.grey[800] : Colors.grey[500],
+                    color: _endDate != null ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary) : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                     fontWeight: _endDate != null ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
@@ -567,16 +532,18 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildActionButtons() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(20),
+        color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.05),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(AppBorderRadius.xLarge),
         ),
         border: Border(
           top: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+            color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.15),
           ),
         ),
       ),
@@ -588,15 +555,14 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
               icon: const Icon(Icons.close, size: 18),
               label: const Text('Annulla'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(color: Colors.grey[400]!, width: 2),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.large),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _isLoading ? null : _submitForm,
@@ -612,12 +578,12 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                   : const Icon(Icons.check, size: 18),
               label: Text(_isLoading ? 'Salvataggio...' : 'Salva'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
+                backgroundColor: isDark ? AppColors.successDark : AppColors.success,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 ),
-                elevation: 3,
+                elevation: AppElevations.button,
               ),
             ),
           ),
@@ -743,15 +709,16 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Color _getNecessityColor(NecessityLevel level) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (level) {
       case NecessityLevel.low:
-        return Colors.green;
+        return isDark ? AppColors.successDark : AppColors.success;
       case NecessityLevel.medium:
-        return Colors.orange;
+        return isDark ? AppColors.warningDark : AppColors.warning;
       case NecessityLevel.high:
-        return Colors.red;
+        return isDark ? AppColors.errorDark : AppColors.error;
       case NecessityLevel.critical:
-        return Colors.deepPurple;
+        return isDark ? AppColors.accentDark : AppColors.accent;
     }
   }
 }

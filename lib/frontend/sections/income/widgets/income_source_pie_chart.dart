@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
-/// Grafico a torta per visualizzare la distribuzione delle fonti di reddito
 class IncomeSourcePieChart extends StatefulWidget {
   final Map<IncomeSource, double> sourceStats;
   final bool showLegend;
@@ -34,7 +34,6 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
 
     return Column(
       children: [
-        // Grafico
         SizedBox(
           height: widget.size ?? 220,
           child: Stack(
@@ -62,7 +61,6 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
                 swapAnimationDuration: const Duration(milliseconds: 600),
                 swapAnimationCurve: Curves.easeInOutQuad,
               ),
-              // Centro con totale
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -74,19 +72,15 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
                   ),
                   Text(
                     'Totale',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: IncomeTheme.getLabelTextStyle(context),
                   ),
                 ],
               ),
             ],
           ),
         ),
-
-        // Legenda
         if (widget.showLegend) ...[
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.large),
           _buildLegend(context, totalAmount),
         ],
       ],
@@ -122,7 +116,7 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
         color: source.color,
         badgeWidget: isTouched
             ? Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppSpacing.small),
           decoration: BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
@@ -151,8 +145,8 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Wrap(
-      spacing: 12,
-      runSpacing: 12,
+      spacing: AppSpacing.medium,
+      runSpacing: AppSpacing.medium,
       alignment: WrapAlignment.center,
       children: sortedEntries.map((entry) {
         final source = entry.key;
@@ -166,12 +160,15 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
               _touchedIndex = _touchedIndex == index ? null : index;
             });
           },
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppBorderRadius.small),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.medium,
+              vertical: AppSpacing.small,
+            ),
             decoration: BoxDecoration(
               color: source.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppBorderRadius.small),
               border: Border.all(
                 color: source.color.withOpacity(0.3),
                 width: 1.5,
@@ -219,6 +216,8 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -226,22 +225,20 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
           Icon(
             Icons.pie_chart_outline,
             size: 64,
-            color: Colors.grey[400],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.large),
           Text(
             'Nessuna fonte di reddito',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[600],
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.small),
           Text(
             'Aggiungi entrate per visualizzare la distribuzione',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[500],
-            ),
+            style: IncomeTheme.getLabelTextStyle(context),
             textAlign: TextAlign.center,
           ),
         ],
@@ -250,7 +247,6 @@ class _IncomeSourcePieChartState extends State<IncomeSourcePieChart> {
   }
 }
 
-/// Card wrapper per il pie chart
 class IncomeSourcePieChartCard extends StatelessWidget {
   final Map<IncomeSource, double> sourceStats;
   final String? title;
@@ -265,9 +261,11 @@ class IncomeSourcePieChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.large),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -277,21 +275,19 @@ class IncomeSourcePieChartCard extends StatelessWidget {
                 children: [
                   Text(
                     title!,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: IncomeTheme.getCardTitleStyle(context).copyWith(fontSize: 16),
                   ),
                   Tooltip(
                     message: 'Distribuzione percentuale delle fonti di reddito',
                     child: Icon(
                       Icons.info_outline,
                       size: 20,
-                      color: Colors.grey[600],
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.large),
             ],
             IncomeSourcePieChart(
               sourceStats: sourceStats,

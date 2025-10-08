@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/blocs.dart';
 import '../../../../backend/models/models.dart';
+import '../../../themes/app_theme.dart';
 import '../pages/income_page.dart';
 
 class IncomeBreakdownCard extends StatelessWidget {
@@ -15,28 +16,30 @@ class IncomeBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
+      elevation: AppElevations.card,
       shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
       ),
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white,
-        ),
+        decoration: IncomeTheme.getBreakdownCardDecoration(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.large,
+                AppSpacing.large,
+                AppSpacing.large,
+                AppSpacing.large,
+              ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(AppSpacing.small),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                     ),
                     child: Icon(
                       Icons.pie_chart_rounded,
@@ -44,15 +47,11 @@ class IncomeBreakdownCard extends StatelessWidget {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.medium),
                   Expanded(
                     child: Text(
                       'Suddivisione Categorie',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                        color: Colors.grey[900],
-                      ),
+                      style: IncomeTheme.getCardTitleStyle(context),
                     ),
                   ),
                 ],
@@ -77,9 +76,14 @@ class IncomeBreakdownCard extends StatelessWidget {
                   final totalAmount = stats.values.fold(0.0, (sum, amount) => sum + amount);
 
                   return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.large,
+                      0,
+                      AppSpacing.large,
+                      AppSpacing.large,
+                    ),
                     itemCount: stats.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.small),
                     itemBuilder: (context, index) {
                       final entry = stats.entries.elementAt(index);
                       final percentage = totalAmount > 0
@@ -104,38 +108,38 @@ class IncomeBreakdownCard extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.large),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.large),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.pie_chart_outline,
                 size: 40,
-                color: Colors.grey[400],
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.medium),
             Text(
               'Nessuna entrata',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Colors.grey[700],
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               'nel periodo selezionato',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[500],
-              ),
+              style: IncomeTheme.getLabelTextStyle(context),
               textAlign: TextAlign.center,
             ),
           ],
@@ -197,21 +201,34 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
   }
 
   Color _getCategoryColor(int index) {
-    final colors = [
-      Colors.blue,
-      Colors.purple,
-      Colors.orange,
-      Colors.teal,
-      Colors.pink,
-      Colors.indigo,
-      Colors.amber,
-      Colors.cyan,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark
+        ? [
+      AppColors.secondaryDark,
+      AppColors.accentDark,
+      AppColors.warningDark,
+      AppColors.primaryDark,
+      AppColors.errorDark,
+      AppColors.secondaryDark.withOpacity(0.8),
+      AppColors.warningDark.withOpacity(0.8),
+      AppColors.primaryDark.withOpacity(0.8),
+    ]
+        : [
+      AppColors.secondary,
+      AppColors.accent,
+      AppColors.warning,
+      AppColors.primary,
+      AppColors.error,
+      AppColors.secondary.withOpacity(0.8),
+      AppColors.warning.withOpacity(0.8),
+      AppColors.primary.withOpacity(0.8),
     ];
     return colors[index % colors.length];
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final categoryColor = _getCategoryColor(widget.index);
 
     return MouseRegion(
@@ -221,27 +238,11 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
         duration: const Duration(milliseconds: 200),
         transform: Matrix4.translationValues(_isHovered ? 4 : 0, 0, 0),
         child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: _isHovered
-                ? categoryColor.withOpacity(0.08)
-                : Colors.white.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isHovered
-                  ? categoryColor.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.15),
-              width: _isHovered ? 2 : 1,
-            ),
-            boxShadow: _isHovered
-                ? [
-              BoxShadow(
-                color: categoryColor.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ]
-                : null,
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          decoration: IncomeTheme.getIncomeListTileDecoration(
+            context,
+            categoryColor,
+            isHovered: _isHovered,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,7 +268,7 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.small),
                         Flexible(
                           child: Text(
                             widget.category,
@@ -276,7 +277,7 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
                                 .bodyMedium
                                 ?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[800],
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -284,7 +285,7 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.small),
                   AnimatedBuilder(
                     animation: _progressAnimation,
                     builder: (context, child) {
@@ -299,7 +300,7 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.small),
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
                 child: AnimatedBuilder(
@@ -307,7 +308,7 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
                   builder: (context, child) {
                     return LinearProgressIndicator(
                       value: _progressAnimation.value / 100,
-                      backgroundColor: Colors.grey.withOpacity(0.15),
+                      backgroundColor: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.15),
                       valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
                       minHeight: 6,
                     );
@@ -319,7 +320,7 @@ class _CategoryBreakdownItemState extends State<_CategoryBreakdownItem>
                 '€ ${widget.amount.toStringAsFixed(2)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  color: isDark ? AppColors.textPrimaryDark.withOpacity(0.8) : AppColors.textPrimary.withOpacity(0.8),
                 ),
               ),
             ],

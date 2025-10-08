@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
-/// Badge visuale per mostrare la fonte di reddito
 class IncomeSourceBadge extends StatelessWidget {
   final IncomeSource source;
   final bool showLabel;
@@ -29,17 +28,10 @@ class IncomeSourceBadge extends StatelessWidget {
   Widget _buildFullBadge() {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: showLabel ? 8 : 6,
+        horizontal: showLabel ? AppSpacing.small : 6,
         vertical: showLabel ? 6 : 6,
       ),
-      decoration: BoxDecoration(
-        color: source.color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: source.color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
+      decoration: IncomeTheme.getSourceBadgeDecoration(source.color),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -66,7 +58,7 @@ class IncomeSourceBadge extends StatelessWidget {
 
   Widget _buildCompactBadge() {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
         color: source.color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(6),
@@ -80,7 +72,6 @@ class IncomeSourceBadge extends StatelessWidget {
   }
 }
 
-/// Badge con tooltip che mostra info al tap
 class InteractiveIncomeSourceBadge extends StatelessWidget {
   final IncomeSource source;
   final bool showLabel;
@@ -103,7 +94,6 @@ class InteractiveIncomeSourceBadge extends StatelessWidget {
   }
 }
 
-/// Lista di badge per statistiche (mostra tutte le fonti usate)
 class IncomeSourceBadgesList extends StatelessWidget {
   final Map<IncomeSource, double> sourceStats;
   final bool showAmounts;
@@ -116,16 +106,20 @@ class IncomeSourceBadgesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (sourceStats.isEmpty) {
-      return const Text(
+      return Text(
         'Nessuna fonte di reddito',
-        style: TextStyle(color: Colors.grey),
+        style: TextStyle(
+          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+        ),
       );
     }
 
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: AppSpacing.small,
+      runSpacing: AppSpacing.small,
       children: sourceStats.entries.map((entry) {
         return _SourceBadgeWithAmount(
           source: entry.key,
@@ -151,10 +145,13 @@ class _SourceBadgeWithAmount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.small,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         color: source.color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         border: Border.all(
           color: source.color.withOpacity(0.3),
         ),
@@ -179,10 +176,13 @@ class _SourceBadgeWithAmount extends StatelessWidget {
           if (showAmount) ...[
             const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 2,
+              ),
               decoration: BoxDecoration(
                 color: source.color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppBorderRadius.small),
               ),
               child: Text(
                 '€${amount.toStringAsFixed(0)}',

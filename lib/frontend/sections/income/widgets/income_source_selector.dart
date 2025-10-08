@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
 class IncomeSourceSelector extends StatelessWidget {
   final IncomeSource? selectedSource;
@@ -17,19 +18,21 @@ class IncomeSourceSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(AppBorderRadius.medium),
             border: Border.all(
               color: errorText != null
-                  ? Colors.red.withOpacity(0.5)
+                  ? (isDark ? AppColors.errorDark : AppColors.error).withOpacity(0.5)
                   : selectedSource != null
                   ? selectedSource!.color.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.3),
+                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.3),
               width: errorText != null ? 2 : 1.5,
             ),
             boxShadow: [
@@ -47,34 +50,21 @@ class IncomeSourceSelector extends StatelessWidget {
               labelText: 'Fonte di Reddito',
               labelStyle: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: selectedSource?.color ?? Colors.grey[700],
+                color: selectedSource?.color ?? (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
               ),
               prefixIcon: Container(
-                margin: const EdgeInsets.all(8),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: selectedSource != null
-                      ? LinearGradient(
+                margin: const EdgeInsets.all(AppSpacing.small),
+                padding: const EdgeInsets.all(AppSpacing.small),
+                decoration: selectedSource != null
+                    ? IncomeTheme.getIconContainerDecoration(selectedSource!.color)
+                    : BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [
-                      selectedSource!.color,
-                      selectedSource!.color.withOpacity(0.7),
-                    ],
-                  )
-                      : LinearGradient(
-                    colors: [
-                      Colors.grey.shade400,
-                      Colors.grey.shade500,
+                      (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+                      (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.7),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    if (selectedSource != null)
-                      BoxShadow(
-                        color: selectedSource!.color.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
+                  borderRadius: BorderRadius.circular(AppBorderRadius.small),
                 ),
                 child: Icon(
                   selectedSource?.icon ?? Icons.account_balance_wallet,
@@ -85,27 +75,31 @@ class IncomeSourceSelector extends StatelessWidget {
               border: InputBorder.none,
               errorText: errorText,
               filled: !enabled,
-              fillColor: enabled ? null : Colors.grey[100],
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              fillColor: enabled ? null : (isDark ? AppColors.surfaceDark : AppColors.surface).withOpacity(0.5),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.large,
+                vertical: AppSpacing.large,
+              ),
             ),
             items: IncomeSource.values.map((source) {
               return DropdownMenuItem(
                 value: source,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.small,
+                    horizontal: AppSpacing.xs,
+                  ),
                   decoration: BoxDecoration(
-                    color: selectedSource == source
-                        ? source.color.withOpacity(0.1)
-                        : null,
-                    borderRadius: BorderRadius.circular(8),
+                    color: selectedSource == source ? source.color.withOpacity(0.1) : null,
+                    borderRadius: BorderRadius.circular(AppBorderRadius.small),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(AppSpacing.small),
                         decoration: BoxDecoration(
                           color: source.color.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppBorderRadius.small),
                         ),
                         child: Icon(
                           source.icon,
@@ -113,14 +107,14 @@ class IncomeSourceSelector extends StatelessWidget {
                           color: source.color,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.medium),
                       Expanded(
                         child: Text(
                           source.displayName,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            color: Colors.grey[800],
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -143,11 +137,11 @@ class IncomeSourceSelector extends StatelessWidget {
               return null;
             },
             isExpanded: true,
-            dropdownColor: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(AppBorderRadius.medium),
             icon: Icon(
               Icons.keyboard_arrow_down,
-              color: selectedSource?.color ?? Colors.grey[600],
+              color: selectedSource?.color ?? (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
             ),
           ),
         ),
@@ -168,15 +162,20 @@ class CompactIncomeSourceSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         border: Border.all(
           color: selectedSource != null
               ? selectedSource!.color.withOpacity(0.3)
-              : Colors.grey.withOpacity(0.3),
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.3),
           width: 1.5,
         ),
         boxShadow: [
@@ -191,30 +190,17 @@ class CompactIncomeSourceSelector extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: selectedSource != null
-                  ? LinearGradient(
+            padding: const EdgeInsets.all(AppSpacing.small),
+            decoration: selectedSource != null
+                ? IncomeTheme.getIconContainerDecoration(selectedSource!.color)
+                : BoxDecoration(
+              gradient: LinearGradient(
                 colors: [
-                  selectedSource!.color,
-                  selectedSource!.color.withOpacity(0.7),
-                ],
-              )
-                  : LinearGradient(
-                colors: [
-                  Colors.grey.shade400,
-                  Colors.grey.shade500,
+                  (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+                  (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.7),
                 ],
               ),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                if (selectedSource != null)
-                  BoxShadow(
-                    color: selectedSource!.color.withOpacity(0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-              ],
+              borderRadius: BorderRadius.circular(AppBorderRadius.small),
             ),
             child: Icon(
               selectedSource?.icon ?? Icons.account_balance_wallet,
@@ -222,14 +208,14 @@ class CompactIncomeSourceSelector extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.medium),
           Expanded(
             child: DropdownButton<IncomeSource>(
               value: selectedSource,
               hint: Text(
                 'Seleziona fonte',
                 style: TextStyle(
-                  color: Colors.grey[600],
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -237,12 +223,12 @@ class CompactIncomeSourceSelector extends StatelessWidget {
               underline: const SizedBox(),
               icon: Icon(
                 Icons.keyboard_arrow_down,
-                color: selectedSource?.color ?? Colors.grey[600],
+                color: selectedSource?.color ?? (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
               ),
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppBorderRadius.medium),
               style: TextStyle(
-                color: Colors.grey[800],
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
@@ -252,7 +238,7 @@ class CompactIncomeSourceSelector extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(source.icon, size: 18, color: source.color),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.small),
                       Text(
                         source.displayName,
                         style: const TextStyle(fontWeight: FontWeight.w600),

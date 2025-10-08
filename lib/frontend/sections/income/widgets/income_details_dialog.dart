@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
 import '../../../../backend/models/income/income_model.dart';
 import '../../../../backend/models/recurrence_model.dart';
+import '../../../themes/app_theme.dart';
 import 'add_income_form.dart';
 
 class IncomeDetailsDialog extends StatelessWidget {
@@ -19,16 +20,18 @@ class IncomeDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
       ),
-      elevation: 10,
+      elevation: AppElevations.dialog,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 550),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
+          color: isDark ? AppColors.surfaceDark : Colors.white,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -36,18 +39,23 @@ class IncomeDetailsDialog extends StatelessWidget {
             _buildHeader(context),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xLarge,
+                  AppSpacing.large,
+                  AppSpacing.xLarge,
+                  AppSpacing.xLarge,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildAmountSection(context),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xLarge),
                     _buildDetailsSection(context),
                     if (income.isRecurring) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xLarge),
                       _buildRecurrenceSection(context),
                     ],
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xLarge),
                     _buildTimestampSection(context),
                   ],
                 ),
@@ -61,8 +69,10 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -72,50 +82,33 @@ class IncomeDetailsDialog extends StatelessWidget {
             income.source.color.withOpacity(0.08),
           ],
         ),
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppBorderRadius.xLarge),
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  income.source.color,
-                  income.source.color.withOpacity(0.7),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: income.source.color.withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: IncomeTheme.getIconContainerDecoration(income.source.color),
             child: Icon(
               income.source.icon,
               color: Colors.white,
               size: 28,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.large),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   income.description,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                    color: Colors.grey[900],
+                  style: IncomeTheme.getCardTitleStyle(context).copyWith(
+                    fontSize: 18,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   income.source.displayName,
                   style: TextStyle(
@@ -131,7 +124,7 @@ class IncomeDetailsDialog extends StatelessWidget {
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.of(context).pop(),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.8),
+              backgroundColor: (isDark ? AppColors.surfaceDark : Colors.white).withOpacity(0.8),
             ),
           ),
         ],
@@ -140,18 +133,21 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildAmountSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final successColor = isDark ? AppColors.successDark : AppColors.success;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.green.withOpacity(0.08),
-            Colors.green.withOpacity(0.15),
+            successColor.withOpacity(0.08),
+            successColor.withOpacity(0.15),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         border: Border.all(
-          color: Colors.green.withOpacity(0.3),
+          color: successColor.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -166,7 +162,7 @@ class IncomeDetailsDialog extends StatelessWidget {
                 Text(
                   '€',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.green.shade600,
+                    color: successColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -174,21 +170,24 @@ class IncomeDetailsDialog extends StatelessWidget {
                 Text(
                   income.amount.toStringAsFixed(2),
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: Colors.green.shade700,
+                    color: successColor,
                     fontWeight: FontWeight.bold,
                     letterSpacing: -1,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.medium),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.medium,
+                vertical: 7,
+              ),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
+                color: successColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(AppBorderRadius.circle),
                 border: Border.all(
-                  color: Colors.green.withOpacity(0.4),
+                  color: successColor.withOpacity(0.4),
                   width: 1.5,
                 ),
               ),
@@ -198,13 +197,13 @@ class IncomeDetailsDialog extends StatelessWidget {
                   Icon(
                     Icons.trending_up,
                     size: 18,
-                    color: Colors.green.shade700,
+                    color: successColor,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Entrata',
                     style: TextStyle(
-                      color: Colors.green.shade700,
+                      color: successColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -229,26 +228,23 @@ class IncomeDetailsDialog extends StatelessWidget {
               size: 20,
               color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.small),
             Text(
               'Dettagli',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.3,
-              ),
+              style: IncomeTheme.getCardTitleStyle(context).copyWith(fontSize: 16),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.large),
         _buildDetailRow(
           context,
           'Data',
           '${income.incomeDate.day.toString().padLeft(2, '0')}/${income.incomeDate.month.toString().padLeft(2, '0')}/${income.incomeDate.year}',
           Icons.calendar_today,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.medium),
         _buildSourceDetailRow(context),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.medium),
         _buildDetailRow(
           context,
           'ID Transazione',
@@ -260,20 +256,22 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildRecurrenceSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
     final settings = income.recurrenceSettings!;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.08),
-            Colors.blue.withOpacity(0.12),
+            secondaryColor.withOpacity(0.08),
+            secondaryColor.withOpacity(0.12),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.3),
+          color: secondaryColor.withOpacity(0.3),
           width: 1.5,
         ),
       ),
@@ -283,51 +281,51 @@ class IncomeDetailsDialog extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.small),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: secondaryColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.small),
                 ),
                 child: Icon(
                   Icons.repeat,
                   size: 18,
-                  color: Colors.blue.shade700,
+                  color: secondaryColor,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.small),
               Text(
                 'Ricorrenza',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade700,
+                  color: secondaryColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.medium),
           _buildDetailRow(
             context,
             'Tipo',
             _getRecurrenceTypeLabel(settings.type),
             _getRecurrenceIcon(settings.type),
-            iconColor: Colors.blue,
+            iconColor: secondaryColor,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.small),
           _buildDetailRow(
             context,
             'Necessità',
             _getNecessityLabel(settings.necessityLevel),
             _getNecessityIcon(settings.necessityLevel),
-            iconColor: _getNecessityColor(settings.necessityLevel),
+            iconColor: _getNecessityColor(settings.necessityLevel, context),
           ),
           if (settings.endDate != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.small),
             _buildDetailRow(
               context,
               'Data Fine',
               '${settings.endDate!.day}/${settings.endDate!.month}/${settings.endDate!.year}',
               Icons.event_available,
-              iconColor: Colors.blue,
+              iconColor: secondaryColor,
             ),
           ],
         ],
@@ -336,13 +334,15 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildTimestampSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
+        color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
+          color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -353,19 +353,19 @@ class IncomeDetailsDialog extends StatelessWidget {
               Icon(
                 Icons.access_time,
                 size: 18,
-                color: Colors.grey[700],
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.small),
               Text(
                 'Informazioni sistema',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.medium),
           _buildDetailRow(
             context,
             'Creato il',
@@ -384,32 +384,31 @@ class IncomeDetailsDialog extends StatelessWidget {
       IconData icon, {
         Color? iconColor,
       }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(
           icon,
           size: 20,
-          color: iconColor ?? Colors.grey[600],
+          color: iconColor ?? (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.medium),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
+                style: IncomeTheme.getLabelTextStyle(context),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 ),
               ),
             ],
@@ -420,45 +419,28 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildSourceDetailRow(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                income.source.color,
-                income.source.color.withOpacity(0.7),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: income.source.color.withOpacity(0.3),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+          decoration: IncomeTheme.getIconContainerDecoration(income.source.color),
           child: Icon(
             income.source.icon,
             size: 20,
             color: Colors.white,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.medium),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Fonte di Reddito',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
+                style: IncomeTheme.getLabelTextStyle(context),
               ),
               const SizedBox(height: 2),
               Text(
@@ -466,15 +448,12 @@ class IncomeDetailsDialog extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 ),
               ),
               Text(
                 income.source.description,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[600],
-                ),
+                style: IncomeTheme.getLabelTextStyle(context).copyWith(fontSize: 11),
               ),
             ],
           ),
@@ -484,16 +463,18 @@ class IncomeDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(20),
+        color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.05),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(AppBorderRadius.xLarge),
         ),
         border: Border(
           top: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+            color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.15),
           ),
         ),
       ),
@@ -505,29 +486,25 @@ class IncomeDetailsDialog extends StatelessWidget {
               icon: const Icon(Icons.edit, size: 18),
               label: const Text('Modifica'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.large),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: () => _duplicateIncome(context),
               icon: const Icon(Icons.copy, size: 18),
               label: const Text('Duplica'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 ),
-                elevation: 2,
+                elevation: AppElevations.button,
               ),
             ),
           ),
@@ -629,16 +606,18 @@ class IncomeDetailsDialog extends StatelessWidget {
     }
   }
 
-  Color _getNecessityColor(NecessityLevel level) {
+  Color _getNecessityColor(NecessityLevel level, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     switch (level) {
       case NecessityLevel.low:
-        return Colors.green;
+        return isDark ? AppColors.successDark : AppColors.success;
       case NecessityLevel.medium:
-        return Colors.orange;
+        return isDark ? AppColors.warningDark : AppColors.warning;
       case NecessityLevel.high:
-        return Colors.red;
+        return isDark ? AppColors.errorDark : AppColors.error;
       case NecessityLevel.critical:
-        return Colors.red[900]!;
+        return isDark ? AppColors.errorDark : AppColors.error;
     }
   }
 }

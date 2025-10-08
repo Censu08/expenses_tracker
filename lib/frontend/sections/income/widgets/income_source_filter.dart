@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
 class IncomeSourceFilter extends StatefulWidget {
   final IncomeSource? selectedSource;
@@ -26,28 +27,31 @@ class _IncomeSourceFilterState extends State<IncomeSourceFilter> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         SizedBox(
           height: 64,
           child: RawScrollbar(
             controller: _scrollController,
-            thumbVisibility: true,
-            trackVisibility: true,
             thumbColor: Theme.of(context).colorScheme.primary.withOpacity(0.7),
-            trackColor: Colors.grey.withOpacity(0.2),
+            trackColor: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.2),
             trackBorderColor: Colors.transparent,
-            radius: const Radius.circular(10),
+            radius: Radius.circular(AppBorderRadius.small),
             thickness: 6,
             interactive: true,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+              padding: const EdgeInsets.only(bottom: AppSpacing.small),
               child: ListView.separated(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.large,
+                  vertical: AppSpacing.xs,
+                ),
                 itemCount: IncomeSource.values.length + 1,
-                separatorBuilder: (context, index) => const SizedBox(width: 8),
+                separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.small),
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return _buildFilterChip(
@@ -56,7 +60,7 @@ class _IncomeSourceFilterState extends State<IncomeSourceFilter> {
                       icon: Icons.grid_view,
                       isSelected: widget.selectedSource == null,
                       onTap: () => widget.onSourceSelected(null),
-                      color: Colors.blue,
+                      color: isDark ? AppColors.secondaryDark : AppColors.secondary,
                     );
                   }
 
@@ -88,27 +92,14 @@ class _IncomeSourceFilterState extends State<IncomeSourceFilter> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppBorderRadius.circle),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? color : color.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ]
-              : null,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.medium,
+          vertical: AppSpacing.small,
         ),
+        decoration: IncomeTheme.getFilterChipDecoration(color, isSelected: isSelected),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -127,8 +118,8 @@ class _IncomeSourceFilterState extends State<IncomeSourceFilter> {
               ),
             ),
             if (isSelected)
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
+              const Padding(
+                padding: EdgeInsets.only(left: 4),
                 child: Icon(
                   Icons.check_circle,
                   size: 14,

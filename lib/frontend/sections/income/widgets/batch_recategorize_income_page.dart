@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
 import '../../../../backend/models/income/income_model.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
 class BatchRecategorizeIncomePage extends StatefulWidget {
   const BatchRecategorizeIncomePage({Key? key}) : super(key: key);
@@ -37,6 +38,8 @@ class _BatchRecategorizeIncomePageState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: _buildAppBar(),
       body: Container(
@@ -45,8 +48,8 @@ class _BatchRecategorizeIncomePageState
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.orange.withOpacity(0.02),
-              Colors.white,
+              AppColors.warning.withOpacity(0.02),
+              isDark ? AppColors.backgroundDark : AppColors.background,
             ],
           ),
         ),
@@ -69,7 +72,7 @@ class _BatchRecategorizeIncomePageState
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Errore: ${state.message}'),
-                  backgroundColor: Colors.red,
+                  backgroundColor: isDark ? AppColors.errorDark : AppColors.error,
                 ),
               );
             }
@@ -109,17 +112,21 @@ class _BatchRecategorizeIncomePageState
   }
 
   Widget _buildFilters() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.grey.shade100,
-            Colors.white,
+            isDark ? AppColors.surfaceDark : AppColors.surface,
+            isDark ? AppColors.backgroundDark : Colors.white,
           ],
         ),
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+          bottom: BorderSide(
+            color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.2),
+          ),
         ),
         boxShadow: [
           BoxShadow(
@@ -135,25 +142,29 @@ class _BatchRecategorizeIncomePageState
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.small),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.warning.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.small),
                 ),
-                child: Icon(Icons.filter_list, color: Colors.orange, size: 18),
+                child: Icon(
+                  Icons.filter_list,
+                  color: isDark ? AppColors.warningDark : AppColors.warning,
+                  size: 18,
+                ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.small),
               Text(
                 'Filtra per fonte attuale',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.medium),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -165,12 +176,12 @@ class _BatchRecategorizeIncomePageState
                     _filterSource = null;
                     _selectedIds.clear();
                   }),
-                  color: Colors.blue,
+                  color: isDark ? AppColors.secondaryDark : AppColors.secondary,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.small),
                 ...IncomeSource.values.map((source) {
                   return Padding(
-                    padding: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.only(right: AppSpacing.small),
                     child: _buildFilterChip(
                       label: source.displayName,
                       icon: source.icon,
@@ -200,32 +211,11 @@ class _BatchRecategorizeIncomePageState
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppBorderRadius.circle),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-            colors: [color, color.withOpacity(0.8)],
-          )
-              : null,
-          color: isSelected ? null : color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? color : color.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ]
-              : null,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: AppSpacing.small),
+        decoration: IncomeTheme.getFilterChipDecoration(color, isSelected: isSelected),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -242,8 +232,8 @@ class _BatchRecategorizeIncomePageState
               ),
             ),
             if (isSelected)
-              Padding(
-                padding: const EdgeInsets.only(left: 6),
+              const Padding(
+                padding: EdgeInsets.only(left: 6),
                 child: Icon(Icons.check_circle, size: 14, color: Colors.white),
               ),
           ],
@@ -253,18 +243,19 @@ class _BatchRecategorizeIncomePageState
   }
 
   Widget _buildStats() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final filteredIncomes = _getFilteredIncomes();
     final selectedCount = _selectedIds.length;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
       decoration: BoxDecoration(
         color: _selectedIds.isNotEmpty
-            ? Colors.blue.withOpacity(0.08)
-            : Colors.white,
+            ? AppColors.secondary.withOpacity(0.08)
+            : (isDark ? AppColors.backgroundDark : Colors.white),
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+            color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.15),
           ),
         ),
       ),
@@ -273,24 +264,23 @@ class _BatchRecategorizeIncomePageState
           Expanded(
             child: Text(
               '${filteredIncomes.length} ${filteredIncomes.length == 1 ? 'entrata' : 'entrate'}${_filterSource != null ? ' (${_filterSource!.displayName})' : ''}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
+              style: IncomeTheme.getLabelTextStyle(context),
             ),
           ),
           if (selectedCount > 0)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: 7),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue, Colors.blue.shade700],
+                  colors: [
+                    isDark ? AppColors.secondaryDark : AppColors.secondary,
+                    (isDark ? AppColors.secondaryDark : AppColors.secondary).withOpacity(0.8),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppBorderRadius.circle),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
+                    color: AppColors.secondary.withOpacity(0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -311,6 +301,7 @@ class _BatchRecategorizeIncomePageState
   }
 
   Widget _buildIncomesList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final filteredIncomes = _getFilteredIncomes();
 
     if (filteredIncomes.isEmpty) {
@@ -319,25 +310,25 @@ class _BatchRecategorizeIncomePageState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.xLarge),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.check_circle_outline,
                 size: 64,
-                color: Colors.grey[400],
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xLarge),
             Text(
               _filterSource != null
                   ? 'Nessuna entrata con fonte "${_filterSource!.displayName}"'
                   : 'Nessuna entrata trovata',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -347,9 +338,9 @@ class _BatchRecategorizeIncomePageState
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.large),
       itemCount: filteredIncomes.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.medium),
       itemBuilder: (context, index) {
         final income = filteredIncomes[index];
         final isSelected = _selectedIds.contains(income.id);
@@ -360,34 +351,36 @@ class _BatchRecategorizeIncomePageState
   }
 
   Widget _buildIncomeCard(IncomeModel income, bool isSelected) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
-      elevation: isSelected ? 6 : 2,
+      elevation: isSelected ? AppElevations.cardHover : AppElevations.card,
       shadowColor: isSelected
-          ? Colors.blue.withOpacity(0.3)
+          ? AppColors.secondary.withOpacity(0.3)
           : Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         side: BorderSide(
-          color: isSelected ? Colors.blue : Colors.transparent,
+          color: isSelected ? (isDark ? AppColors.secondaryDark : AppColors.secondary) : Colors.transparent,
           width: 2,
         ),
       ),
       child: InkWell(
         onTap: () => _toggleSelection(income.id),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppBorderRadius.large),
             gradient: isSelected
                 ? LinearGradient(
               colors: [
-                Colors.blue.withOpacity(0.08),
-                Colors.blue.withOpacity(0.04),
+                AppColors.secondary.withOpacity(0.08),
+                AppColors.secondary.withOpacity(0.04),
               ],
             )
                 : null,
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.large),
           child: Row(
             children: [
               Transform.scale(
@@ -395,38 +388,23 @@ class _BatchRecategorizeIncomePageState
                 child: Checkbox(
                   value: isSelected,
                   onChanged: (_) => _toggleSelection(income.id),
-                  activeColor: Colors.blue,
+                  activeColor: isDark ? AppColors.secondaryDark : AppColors.secondary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.medium),
               Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      income.source.color,
-                      income.source.color.withOpacity(0.7),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: income.source.color.withOpacity(0.4),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.all(AppSpacing.medium),
+                decoration: IncomeTheme.getIconContainerDecoration(income.source.color),
                 child: Icon(
                   income.source.icon,
                   color: Colors.white,
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.medium),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +414,7 @@ class _BatchRecategorizeIncomePageState
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: Colors.grey[800],
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -446,16 +424,10 @@ class _BatchRecategorizeIncomePageState
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            horizontal: AppSpacing.small,
+                            vertical: AppSpacing.xs,
                           ),
-                          decoration: BoxDecoration(
-                            color: income.source.color.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: income.source.color.withOpacity(0.3),
-                            ),
-                          ),
+                          decoration: IncomeTheme.getSourceBadgeDecoration(income.source.color),
                           child: Text(
                             income.source.displayName,
                             style: TextStyle(
@@ -465,16 +437,16 @@ class _BatchRecategorizeIncomePageState
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Icon(Icons.calendar_today,
-                            size: 12, color: Colors.grey[500]),
+                        const SizedBox(width: AppSpacing.small),
+                        Icon(
+                          Icons.calendar_today,
+                          size: 12,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${income.incomeDate.day}/${income.incomeDate.month}/${income.incomeDate.year}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                          style: IncomeTheme.getLabelTextStyle(context).copyWith(fontSize: 12),
                         ),
                       ],
                     ),
@@ -483,11 +455,7 @@ class _BatchRecategorizeIncomePageState
               ),
               Text(
                 '€${income.amount.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.green.shade600,
-                ),
+                style: IncomeTheme.getAmountTextStyle(context).copyWith(fontSize: 16),
               ),
             ],
           ),
@@ -497,10 +465,12 @@ class _BatchRecategorizeIncomePageState
   }
 
   Widget _buildBottomBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.surfaceDark : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -515,36 +485,42 @@ class _BatchRecategorizeIncomePageState
           children: [
             Row(
               children: [
-                Icon(Icons.edit, color: Colors.orange, size: 20),
-                const SizedBox(width: 10),
+                Icon(
+                  Icons.edit,
+                  color: isDark ? AppColors.warningDark : AppColors.warning,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.small),
                 Text(
                   'Seleziona nuova fonte',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.medium),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                 border: Border.all(
                   color: _targetSource != null
                       ? _targetSource!.color.withOpacity(0.3)
-                      : Colors.grey.withOpacity(0.3),
+                      : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.3),
                   width: 1.5,
                 ),
               ),
               child: DropdownButtonFormField<IncomeSource>(
                 value: _targetSource,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.large,
+                    vertical: AppSpacing.medium,
+                  ),
                 ),
                 hint: const Text('Scegli fonte'),
                 items: IncomeSource.values.map((source) {
@@ -553,7 +529,7 @@ class _BatchRecategorizeIncomePageState
                     child: Row(
                       children: [
                         Icon(source.icon, size: 20, color: source.color),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.medium),
                         Text(
                           source.displayName,
                           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -565,7 +541,7 @@ class _BatchRecategorizeIncomePageState
                 onChanged: (value) => setState(() => _targetSource = value),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.large),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -589,12 +565,12 @@ class _BatchRecategorizeIncomePageState
                       : 'Applica a ${_selectedIds.length} ${_selectedIds.length == 1 ? 'entrata' : 'entrate'}',
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
+                  backgroundColor: isDark ? AppColors.warningDark : AppColors.warning,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                   ),
-                  elevation: 4,
+                  elevation: AppElevations.button,
                 ),
               ),
             ),
@@ -657,7 +633,7 @@ class _BatchRecategorizeIncomePageState
           SnackBar(
             content: Text(
                 '${_selectedIds.length} ${_selectedIds.length == 1 ? 'entrata aggiornata' : 'entrate aggiornate'}!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -669,7 +645,7 @@ class _BatchRecategorizeIncomePageState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Errore: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }

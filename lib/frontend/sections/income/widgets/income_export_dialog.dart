@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/controllers/income_controller.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
 enum ExportFormat { csv, json, report }
 
@@ -25,16 +26,18 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
       ),
-      elevation: 10,
+      elevation: AppElevations.dialog,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 550, maxHeight: 720),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
+          color: isDark ? AppColors.surfaceDark : Colors.white,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -42,16 +45,16 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xLarge),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildFormatSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xLarge),
                     _buildOptionsSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xLarge),
                     _buildDateRangeSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xLarge),
                     _buildSourceFilterSection(),
                   ],
                 ),
@@ -65,68 +68,48 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
   }
 
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue.withOpacity(0.15),
-            Colors.blue.withOpacity(0.08),
+            secondaryColor.withOpacity(0.15),
+            secondaryColor.withOpacity(0.08),
           ],
         ),
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppBorderRadius.xLarge),
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.blue.shade400,
-                  Colors.blue.shade600,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: IncomeTheme.getIconContainerDecoration(secondaryColor),
             child: const Icon(
               Icons.file_download,
               color: Colors.white,
               size: 24,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.large),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Esporta Dati Entrate',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[900],
-                    letterSpacing: -0.5,
-                  ),
+                  style: IncomeTheme.getCardTitleStyle(context),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Configura le opzioni di export',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  style: IncomeTheme.getLabelTextStyle(context),
                 ),
               ],
             ),
@@ -135,7 +118,7 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.8),
+              backgroundColor: (isDark ? AppColors.surfaceDark : Colors.white).withOpacity(0.8),
             ),
           ),
         ],
@@ -144,48 +127,54 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
   }
 
   Widget _buildFormatSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.file_present, size: 20, color: Colors.grey[700]),
-            const SizedBox(width: 8),
+            Icon(
+              Icons.file_present,
+              size: 20,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.small),
             Text(
               'Formato Export',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.large),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: AppSpacing.medium,
+          runSpacing: AppSpacing.medium,
           children: [
             _buildFormatChip(
               format: ExportFormat.csv,
               icon: Icons.table_chart,
               label: 'CSV',
               description: 'Excel, Fogli',
-              color: Colors.green,
+              color: isDark ? AppColors.successDark : AppColors.success,
             ),
             _buildFormatChip(
               format: ExportFormat.json,
               icon: Icons.code,
               label: 'JSON',
               description: 'Dati strutturati',
-              color: Colors.orange,
+              color: isDark ? AppColors.warningDark : AppColors.warning,
             ),
             _buildFormatChip(
               format: ExportFormat.report,
               icon: Icons.article,
               label: 'Report',
               description: 'Analisi testuale',
-              color: Colors.purple,
+              color: isDark ? AppColors.accentDark : AppColors.accent,
             ),
           ],
         ),
@@ -200,14 +189,18 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
     required String description,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedFormat == format;
 
     return InkWell(
       onTap: () => setState(() => _selectedFormat = format),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppBorderRadius.medium),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.large,
+          vertical: AppSpacing.medium,
+        ),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
@@ -217,10 +210,14 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
             ],
           )
               : null,
-          color: isSelected ? null : Colors.grey.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected
+              ? null
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(AppBorderRadius.medium),
           border: Border.all(
-            color: isSelected ? color : Colors.grey.withOpacity(0.3),
+            color: isSelected
+                ? color
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -228,18 +225,24 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.small),
               decoration: BoxDecoration(
-                color: isSelected ? color.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: isSelected
+                    ? color.withOpacity(0.2)
+                    : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppBorderRadius.small),
               ),
               child: Icon(
                 icon,
-                color: isSelected ? color : Colors.grey[600],
+                color: isSelected
+                    ? color
+                    : isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondary,
                 size: 20,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.small),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -248,21 +251,22 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                   label,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? color : Colors.grey[800],
+                    color: isSelected
+                        ? color
+                        : isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
                     fontSize: 14,
                   ),
                 ),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[600],
-                  ),
+                  style: IncomeTheme.getLabelTextStyle(context).copyWith(fontSize: 11),
                 ),
               ],
             ),
             if (isSelected) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.small),
               Icon(Icons.check_circle, color: color, size: 18),
             ],
           ],
@@ -276,13 +280,16 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
       return const SizedBox.shrink();
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
+        color: secondaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
+          color: secondaryColor.withOpacity(0.2),
         ),
       ),
       child: CheckboxListTile(
@@ -297,30 +304,36 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
         value: _groupBySource,
         onChanged: (value) => setState(() => _groupBySource = value ?? true),
         contentPadding: EdgeInsets.zero,
-        activeColor: Colors.blue,
+        activeColor: secondaryColor,
       ),
     );
   }
 
   Widget _buildDateRangeSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.date_range, size: 20, color: Colors.grey[700]),
-            const SizedBox(width: 8),
+            Icon(
+              Icons.date_range,
+              size: 20,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.small),
             Text(
               'Intervallo Date (Opzionale)',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.large),
         Row(
           children: [
             Expanded(
@@ -330,7 +343,7 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                 onTap: () => _selectDate(true),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.medium),
             Expanded(
               child: _buildDateButton(
                 label: 'Data Fine',
@@ -349,16 +362,21 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
     required DateTime? date,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppBorderRadius.medium),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.medium),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.medium),
           border: Border.all(
-            color: date != null ? Colors.purple.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+            color: date != null
+                ? accentColor.withOpacity(0.3)
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.3),
             width: 1.5,
           ),
         ),
@@ -367,19 +385,19 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
+              style: IncomeTheme.getLabelTextStyle(context),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
                 Icon(
                   Icons.calendar_today,
                   size: 14,
-                  color: date != null ? Colors.purple : Colors.grey[500],
+                  color: date != null
+                      ? accentColor
+                      : isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -387,7 +405,9 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: date != null ? FontWeight.w600 : FontWeight.normal,
-                    color: date != null ? Colors.grey[800] : Colors.grey[500],
+                    color: date != null
+                        ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)
+                        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -399,40 +419,49 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
   }
 
   Widget _buildSourceFilterSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.filter_list, size: 20, color: Colors.grey[700]),
-            const SizedBox(width: 8),
+            Icon(
+              Icons.filter_list,
+              size: 20,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.small),
             Text(
               'Filtra per Fonte (Opzionale)',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.medium),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(AppBorderRadius.medium),
             border: Border.all(
               color: _filterSource != null
                   ? _filterSource!.color.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.3),
+                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.3),
               width: 1.5,
             ),
           ),
           child: DropdownButtonFormField<IncomeSource?>(
             value: _filterSource,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.large,
+                vertical: AppSpacing.medium,
+              ),
             ),
             hint: const Text('Tutte le fonti'),
             items: [
@@ -446,7 +475,7 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                   child: Row(
                     children: [
                       Icon(source.icon, size: 18, color: source.color),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.small),
                       Text(
                         source.displayName,
                         style: const TextStyle(fontWeight: FontWeight.w500),
@@ -464,16 +493,20 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
   }
 
   Widget _buildActions() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
+    final successColor = isDark ? AppColors.successDark : AppColors.success;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(20),
+        color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.05),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(AppBorderRadius.xLarge),
         ),
         border: Border(
           top: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+            color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.15),
           ),
         ),
       ),
@@ -481,24 +514,24 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
         children: [
           if (_exportedData != null)
             Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              margin: const EdgeInsets.only(bottom: AppSpacing.large),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: successColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppBorderRadius.small),
                 border: Border.all(
-                  color: Colors.green.withOpacity(0.3),
+                  color: successColor.withOpacity(0.3),
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
-                  const SizedBox(width: 10),
+                  Icon(Icons.check_circle, color: successColor, size: 20),
+                  const SizedBox(width: AppSpacing.small),
                   Expanded(
                     child: Text(
                       'Export completato! Copia negli appunti.',
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        color: successColor,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -520,15 +553,14 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                   icon: const Icon(Icons.close, size: 18),
                   label: const Text('Annulla'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: Colors.grey[400]!, width: 2),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.large),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isExporting ? null : _handleExport,
@@ -544,12 +576,12 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
                       : const Icon(Icons.download, size: 18),
                   label: Text(_isExporting ? 'Esportando...' : 'Esporta'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
+                    backgroundColor: secondaryColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                     ),
-                    elevation: 3,
+                    elevation: AppElevations.button,
                   ),
                 ),
               ),
@@ -629,7 +661,7 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Export completato! Puoi copiare il contenuto.'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -639,7 +671,7 @@ class _IncomeExportDialogState extends State<IncomeExportDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Errore: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }

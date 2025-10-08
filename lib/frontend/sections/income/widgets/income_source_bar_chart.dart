@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
-/// Grafico a barre per confrontare gli importi tra diverse fonti di reddito
 class IncomeSourceBarChart extends StatefulWidget {
   final Map<IncomeSource, double> sourceStats;
   final bool showValues;
@@ -39,6 +39,7 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
   }
 
   Widget _buildVerticalBarChart() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final sortedEntries = widget.sourceStats.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -61,8 +62,8 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
             });
           },
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) => Colors.black87,
-            tooltipRoundedRadius: 8,
+            getTooltipColor: (_) => isDark ? AppColors.surfaceDark : Colors.black87,
+            tooltipRoundedRadius: AppBorderRadius.small,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final source = sortedEntries[groupIndex].key;
               return BarTooltipItem(
@@ -91,28 +92,28 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
+              reservedSize: 42,
               getTitlesWidget: (value, meta) {
                 if (value.toInt() >= sortedEntries.length) {
                   return const SizedBox.shrink();
                 }
                 final source = sortedEntries[value.toInt()].key;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.only(top: 6),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         source.icon,
-                        size: 18,
+                        size: 16,
                         color: source.color,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         _getShortName(source.displayName),
                         style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey[700],
+                          fontSize: 9,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.center,
@@ -132,7 +133,7 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
                   '€${(value / 1000).toStringAsFixed(0)}k',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.grey[600],
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                   ),
                 );
               },
@@ -151,7 +152,7 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
           horizontalInterval: maxValue / 5,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey[300],
+              color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.15),
               strokeWidth: 1,
               dashArray: [5, 5],
             );
@@ -172,9 +173,9 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return ListView.separated(
-      padding: EdgeInsets.zero, // ⬅️ FIX: Remove default padding
+      padding: EdgeInsets.zero,
       itemCount: sortedEntries.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8), // ⬅️ FIX: Reduced from 12
+      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.small),
       itemBuilder: (context, index) {
         final entry = sortedEntries[index];
         final source = entry.key;
@@ -198,33 +199,34 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
       double amount,
       double percentage,
       ) {
-    // ⬅️ FIX: Wrapped in ConstrainedBox to prevent overflow
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ConstrainedBox(
       constraints: const BoxConstraints(
-        minHeight: 50, // Minimum height for bar
-        maxHeight: 70, // Maximum height to prevent overflow
+        minHeight: 50,
+        maxHeight: 70,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // ⬅️ FIX: Use min size
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with icon, name, amount
           Row(
             children: [
               Icon(
                 source.icon,
-                size: 18, // ⬅️ FIX: Reduced from 20
+                size: 18,
                 color: source.color,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.small),
               Expanded(
                 child: Text(
                   source.displayName,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    fontSize: 13, // ⬅️ FIX: Explicit smaller size
+                    fontSize: 13,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                   ),
-                  maxLines: 1, // ⬅️ FIX: Prevent text overflow
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -232,19 +234,17 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
                 '€${amount.toStringAsFixed(0)}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14, // ⬅️ FIX: Explicit size
+                  fontSize: 14,
                   color: source.color,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6), // ⬅️ FIX: Reduced from 8
-
-          // Progress bar
+          const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(6), // ⬅️ FIX: Reduced radius
+            borderRadius: BorderRadius.circular(6),
             child: SizedBox(
-              height: 10, // ⬅️ FIX: Explicit height instead of minHeight
+              height: 10,
               child: LinearProgressIndicator(
                 value: percentage,
                 backgroundColor: source.color.withOpacity(0.2),
@@ -273,7 +273,7 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
             toY: amount,
             color: source.color,
             width: isTouched ? 28 : 22,
-            borderRadius: const BorderRadius.vertical(
+            borderRadius: BorderRadius.vertical(
               top: Radius.circular(6),
             ),
             backDrawRodData: BackgroundBarChartRodData(
@@ -289,12 +289,13 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
   }
 
   String _getShortName(String name) {
-    // Abbrevia nomi lunghi
     if (name.length <= 8) return name;
     return '${name.substring(0, 6)}..';
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -302,13 +303,13 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
           Icon(
             Icons.bar_chart,
             size: 64,
-            color: Colors.grey[400],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.large),
           Text(
             'Nessuna fonte di reddito',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[600],
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -318,7 +319,6 @@ class _IncomeSourceBarChartState extends State<IncomeSourceBarChart> {
   }
 }
 
-/// Card wrapper per il bar chart
 class IncomeSourceBarChartCard extends StatelessWidget {
   final Map<IncomeSource, double> sourceStats;
   final String? title;
@@ -335,12 +335,14 @@ class IncomeSourceBarChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.large),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // ⬅️ FIX: Use min size
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (title != null) ...[
               Row(
@@ -348,23 +350,20 @@ class IncomeSourceBarChartCard extends StatelessWidget {
                 children: [
                   Text(
                     title!,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: IncomeTheme.getCardTitleStyle(context).copyWith(fontSize: 16),
                   ),
                   Tooltip(
                     message: 'Confronto importi tra fonti di reddito',
                     child: Icon(
                       Icons.info_outline,
                       size: 20,
-                      color: Colors.grey[600],
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.large),
             ],
-            // ⬅️ FIX: Wrap in Flexible to prevent overflow
             Flexible(
               child: IncomeSourceBarChart(
                 sourceStats: sourceStats,

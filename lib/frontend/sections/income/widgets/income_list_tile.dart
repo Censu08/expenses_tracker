@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../backend/models/models.dart';
+import '../../../themes/app_theme.dart';
 import '../pages/income_page.dart';
 import '../functions/income_page_functions.dart';
 import 'income_source_badge.dart';
@@ -16,10 +17,12 @@ class IncomeListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 8,
+        horizontal: AppSpacing.large,
+        vertical: AppSpacing.small,
       ),
       leading: CircleAvatar(
         backgroundColor: income.source.color.withOpacity(0.1),
@@ -27,26 +30,30 @@ class IncomeListTile extends StatelessWidget {
       ),
       title: Text(
         income.description,
-        style: const TextStyle(fontWeight: FontWeight.w500),
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             income.description,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              // Badge categoria esistente
               Icon(income.source.icon, size: 14, color: income.source.color),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xs),
               Text(
                 income.source.description,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: IncomeTheme.getLabelTextStyle(context),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.medium),
               IncomeSourceBadge(
                 source: income.source,
                 showLabel: true,
@@ -61,9 +68,9 @@ class IncomeListTile extends StatelessWidget {
         children: [
           Text(
             '+€ ${income.amount.toStringAsFixed(2)}',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.green,
+              color: isDark ? AppColors.successDark : AppColors.success,
               fontSize: 16,
             ),
           ),
@@ -76,18 +83,27 @@ class IncomeListTile extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(Icons.edit, size: 18),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.small),
                     Text('Modifica'),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, size: 18, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Elimina', style: TextStyle(color: Colors.red)),
+                    Icon(
+                      Icons.delete,
+                      size: 18,
+                      color: isDark ? AppColors.errorDark : AppColors.error,
+                    ),
+                    const SizedBox(width: AppSpacing.small),
+                    Text(
+                      'Elimina',
+                      style: TextStyle(
+                        color: isDark ? AppColors.errorDark : AppColors.error,
+                      ),
+                    ),
                   ],
                 ),
               ),

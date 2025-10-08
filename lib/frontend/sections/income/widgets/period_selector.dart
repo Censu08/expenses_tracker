@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../themes/app_theme.dart';
 import '../pages/income_page.dart';
 import '../functions/income_page_functions.dart';
 
@@ -19,73 +20,55 @@ class _PeriodSelectorState extends State<PeriodSelector> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         child: Card(
-          elevation: _isHovered ? 6 : 4,
+          elevation: _isHovered ? AppElevations.cardHover : AppElevations.card,
           shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppBorderRadius.large),
           ),
           child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.03),
-                ],
-              ),
+            decoration: IncomeTheme.getPeriodSelectorDecoration(
+              context,
+              isHovered: _isHovered,
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.large),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                    padding: const EdgeInsets.all(AppSpacing.small),
+                    decoration: IncomeTheme.getIconContainerDecoration(
+                      Theme.of(context).colorScheme.primary,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.date_range,
                       color: Colors.white,
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.medium),
                   Text(
                     'Periodo:',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.3,
-                      color: Colors.grey[800],
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.large),
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                         ),
@@ -102,25 +85,25 @@ class _PeriodSelectorState extends State<PeriodSelector> {
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                        dropdownColor: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                         items: widget.pageState.periods.map((period) {
                           final isSelected = period == widget.pageState.selectedPeriod;
                           return DropdownMenuItem(
                             value: period,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.small),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
                                     : null,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(AppBorderRadius.small),
                               ),
                               child: Row(
                                 children: [
                                   if (isSelected)
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.only(right: AppSpacing.small),
                                       child: Icon(
                                         Icons.check_circle,
                                         size: 16,

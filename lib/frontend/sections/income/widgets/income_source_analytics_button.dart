@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
 import '../../../../core/providers/bloc_providers.dart';
+import '../../../themes/app_theme.dart';
 import '../pages/income_page.dart';
 import 'income_source_analytics_dialog.dart';
 
@@ -72,6 +73,8 @@ class _IncomeSourceAnalyticsButtonState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocListener<IncomeBloc, IncomeState>(
       listener: (context, state) {
         if (state is IncomeStatsBySourceLoaded) {
@@ -92,24 +95,24 @@ class _IncomeSourceAnalyticsButtonState
         }
       },
       child: Card(
-        elevation: 3,
-        shadowColor: Colors.blue.withOpacity(0.2),
+        elevation: AppElevations.card,
+        shadowColor: (isDark ? AppColors.secondaryDark : AppColors.secondary).withOpacity(0.2),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppBorderRadius.large),
         ),
         child: InkWell(
           onTap: () => _showAnalyticsDialog(context),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppBorderRadius.large),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.large),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppBorderRadius.large),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.blue.withOpacity(0.05),
-                  Colors.purple.withOpacity(0.05),
+                  (isDark ? AppColors.secondaryDark : AppColors.secondary).withOpacity(0.05),
+                  (isDark ? AppColors.accentDark : AppColors.accent).withOpacity(0.05),
                 ],
               ),
             ),
@@ -121,6 +124,8 @@ class _IncomeSourceAnalyticsButtonState
   }
 
   Widget _buildLoadingState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -129,11 +134,11 @@ class _IncomeSourceAnalyticsButtonState
           height: 18,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.small),
         Flexible(
           child: Text(
             'Caricamento...',
-            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            style: IncomeTheme.getLabelTextStyle(context),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -142,26 +147,30 @@ class _IncomeSourceAnalyticsButtonState
   }
 
   Widget _buildButtonContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(AppSpacing.small),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.blue.withOpacity(0.2),
-                Colors.purple.withOpacity(0.2),
+                secondaryColor.withOpacity(0.2),
+                accentColor.withOpacity(0.2),
               ],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppBorderRadius.medium),
           ),
           child: Icon(
             Icons.analytics,
-            color: Colors.blue,
+            color: secondaryColor,
             size: 24,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.medium),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,31 +180,32 @@ class _IncomeSourceAnalyticsButtonState
                 'Analisi Fonti',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               if (_cachedStats != null)
                 Text(
                   '${_cachedStats!.length} fonte${_cachedStats!.length != 1 ? 'i' : ''}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontSize: 11,
-                  ),
+                  style: IncomeTheme.getLabelTextStyle(context).copyWith(fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
             ],
           ),
         ),
         if (_cachedScore != null) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.small),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.small,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
-              color: _getScoreColor(_cachedScore!).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+              color: _getScoreColor(_cachedScore!, context).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(AppBorderRadius.medium),
               border: Border.all(
-                color: _getScoreColor(_cachedScore!).withOpacity(0.5),
+                color: _getScoreColor(_cachedScore!, context).withOpacity(0.5),
                 width: 1.5,
               ),
             ),
@@ -207,7 +217,7 @@ class _IncomeSourceAnalyticsButtonState
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: _getScoreColor(_cachedScore!),
+                    color: _getScoreColor(_cachedScore!, context),
                     height: 1,
                   ),
                 ),
@@ -215,7 +225,7 @@ class _IncomeSourceAnalyticsButtonState
                   '/100',
                   style: TextStyle(
                     fontSize: 8,
-                    color: _getScoreColor(_cachedScore!).withOpacity(0.8),
+                    color: _getScoreColor(_cachedScore!, context).withOpacity(0.8),
                     height: 1,
                   ),
                 ),
@@ -223,11 +233,11 @@ class _IncomeSourceAnalyticsButtonState
             ),
           ),
         ],
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.small),
         Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey[400],
+          color: isDark ? AppColors.textSecondaryDark.withOpacity(0.4) : AppColors.textSecondary.withOpacity(0.4),
         ),
       ],
     );
@@ -257,10 +267,12 @@ class _IncomeSourceAnalyticsButtonState
     );
   }
 
-  Color _getScoreColor(int score) {
-    if (score >= 70) return Colors.green;
-    if (score >= 50) return Colors.lightGreen;
-    if (score >= 30) return Colors.orange;
-    return Colors.red;
+  Color _getScoreColor(int score, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (score >= 70) return isDark ? AppColors.successDark : AppColors.success;
+    if (score >= 50) return isDark ? AppColors.successDark.withOpacity(0.8) : AppColors.success.withOpacity(0.8);
+    if (score >= 30) return isDark ? AppColors.warningDark : AppColors.warning;
+    return isDark ? AppColors.errorDark : AppColors.error;
   }
 }

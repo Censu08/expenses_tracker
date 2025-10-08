@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
 import '../../../../backend/models/income/income_source_enum.dart';
+import '../../../themes/app_theme.dart';
 
-/// Card che mostra il Diversification Score con gauge visuale
 class DiversificationScoreCard extends StatelessWidget {
-  final int score; // 0-100
+  final int score;
   final Map<IncomeSource, double>? sourceStats;
   final bool showDetails;
   final VoidCallback? onTap;
@@ -20,18 +20,17 @@ class DiversificationScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scoreLevel = _getScoreLevel(score);
+    final scoreLevel = _getScoreLevel(context, score);
 
     return Card(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.large),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -41,16 +40,12 @@ class DiversificationScoreCard extends StatelessWidget {
                       children: [
                         Text(
                           'Diversificazione',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: IncomeTheme.getCardTitleStyle(context),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           scoreLevel.description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: IncomeTheme.getLabelTextStyle(context),
                         ),
                       ],
                     ),
@@ -61,15 +56,16 @@ class DiversificationScoreCard extends StatelessWidget {
                     child: Icon(
                       Icons.info_outline,
                       size: 20,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xLarge),
 
-              // Gauge
               Center(
                 child: SizedBox(
                   height: 160,
@@ -78,18 +74,17 @@ class DiversificationScoreCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xLarge),
 
-              // Score Badge
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    horizontal: AppSpacing.large,
+                    vertical: AppSpacing.medium,
                   ),
                   decoration: BoxDecoration(
                     color: scoreLevel.color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppBorderRadius.circle),
                     border: Border.all(
                       color: scoreLevel.color.withOpacity(0.3),
                       width: 2,
@@ -103,7 +98,7 @@ class DiversificationScoreCard extends StatelessWidget {
                         color: scoreLevel.color,
                         size: 24,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.medium),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -130,11 +125,10 @@ class DiversificationScoreCard extends StatelessWidget {
                 ),
               ),
 
-              // Dettagli
               if (showDetails && sourceStats != null) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xLarge),
                 const Divider(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.large),
                 _buildDetails(context, scoreLevel),
               ],
             ],
@@ -145,18 +139,20 @@ class DiversificationScoreCard extends StatelessWidget {
   }
 
   Widget _buildGauge(BuildContext context, _ScoreLevel scoreLevel) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Background arc
         PieChart(
           PieChartData(
             startDegreeOffset: 180,
             sections: [
-              // Background
               PieChartSectionData(
                 value: 100,
-                color: Colors.grey[200],
+                color: isDark
+                    ? AppColors.textSecondaryDark.withOpacity(0.2)
+                    : AppColors.textSecondary.withOpacity(0.2),
                 radius: 25,
                 showTitle: false,
               ),
@@ -165,12 +161,10 @@ class DiversificationScoreCard extends StatelessWidget {
             centerSpaceRadius: 60,
           ),
         ),
-        // Score arc
         PieChart(
           PieChartData(
             startDegreeOffset: 180,
             sections: [
-              // Filled part
               PieChartSectionData(
                 value: score.toDouble(),
                 color: scoreLevel.color,
@@ -183,7 +177,6 @@ class DiversificationScoreCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Empty part
               PieChartSectionData(
                 value: (100 - score).toDouble(),
                 color: Colors.transparent,
@@ -195,7 +188,6 @@ class DiversificationScoreCard extends StatelessWidget {
             centerSpaceRadius: 60,
           ),
         ),
-        // Center text
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -208,9 +200,7 @@ class DiversificationScoreCard extends StatelessWidget {
             ),
             Text(
               'su 100',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: IncomeTheme.getLabelTextStyle(context),
             ),
           ],
         ),
@@ -234,14 +224,14 @@ class DiversificationScoreCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.medium),
         _buildDetailRow(
           context,
           Icons.source,
           'Fonti attive',
           '$sourceCount ${sourceCount == 1 ? 'fonte' : 'fonti'}',
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.small),
         _buildDetailRow(
           context,
           primarySource.key.icon,
@@ -249,7 +239,7 @@ class DiversificationScoreCard extends StatelessWidget {
           '${primarySource.key.displayName} (${primaryPercentage.toStringAsFixed(1)}%)',
           iconColor: primarySource.key.color,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.large),
         _buildRecommendation(context, scoreLevel, primaryPercentage),
       ],
     );
@@ -262,20 +252,20 @@ class DiversificationScoreCard extends StatelessWidget {
       String value, {
         Color? iconColor,
       }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Icon(
           icon,
           size: 18,
-          color: iconColor ?? Colors.grey[600],
+          color: iconColor ?? (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.small),
         Expanded(
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[700],
-            ),
+            style: IncomeTheme.getLabelTextStyle(context),
           ),
         ),
         Text(
@@ -300,26 +290,34 @@ class DiversificationScoreCard extends StatelessWidget {
     if (score >= 70) {
       recommendation = 'Ottima diversificazione! Le tue entrate sono ben bilanciate.';
       icon = Icons.check_circle;
-      color = Colors.green;
+      color = Theme.of(context).brightness == Brightness.dark
+          ? AppColors.successDark
+          : AppColors.success;
     } else if (score >= 50) {
       recommendation = 'Buona diversificazione, ma puoi migliorare aggiungendo altre fonti.';
       icon = Icons.warning_amber;
-      color = Colors.orange;
+      color = Theme.of(context).brightness == Brightness.dark
+          ? AppColors.warningDark
+          : AppColors.warning;
     } else if (score >= 30) {
       recommendation = 'Dipendi troppo da poche fonti. Considera di diversificare.';
       icon = Icons.error_outline;
-      color = Colors.orange;
+      color = Theme.of(context).brightness == Brightness.dark
+          ? AppColors.warningDark
+          : AppColors.warning;
     } else {
       recommendation = 'Attenzione! Dipendi quasi totalmente da una fonte. Diversifica urgentemente.';
       icon = Icons.error;
-      color = Colors.red;
+      color = Theme.of(context).brightness == Brightness.dark
+          ? AppColors.errorDark
+          : AppColors.error;
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppBorderRadius.small),
         border: Border.all(
           color: color.withOpacity(0.3),
         ),
@@ -332,7 +330,7 @@ class DiversificationScoreCard extends StatelessWidget {
             size: 20,
             color: color,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.medium),
           Expanded(
             child: Text(
               recommendation,
@@ -346,47 +344,48 @@ class DiversificationScoreCard extends StatelessWidget {
     );
   }
 
-  _ScoreLevel _getScoreLevel(int score) {
+  _ScoreLevel _getScoreLevel(BuildContext context, int score) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (score >= 80) {
       return _ScoreLevel(
         label: 'Eccellente',
         description: 'Le tue entrate sono molto diversificate',
-        color: Colors.green,
+        color: isDark ? AppColors.successDark : AppColors.success,
         icon: Icons.stars,
       );
     } else if (score >= 60) {
       return _ScoreLevel(
         label: 'Buono',
         description: 'Buon livello di diversificazione',
-        color: Colors.lightGreen,
+        color: isDark ? AppColors.successDark.withOpacity(0.8) : AppColors.success.withOpacity(0.8),
         icon: Icons.thumb_up,
       );
     } else if (score >= 40) {
       return _ScoreLevel(
         label: 'Moderato',
         description: 'C\'è spazio per migliorare',
-        color: Colors.orange,
+        color: isDark ? AppColors.warningDark : AppColors.warning,
         icon: Icons.warning_amber,
       );
     } else if (score >= 20) {
       return _ScoreLevel(
         label: 'Basso',
         description: 'Dipendi da poche fonti',
-        color: Colors.deepOrange,
+        color: isDark ? AppColors.warningDark : AppColors.warning.withOpacity(0.9),
         icon: Icons.error_outline,
       );
     } else {
       return _ScoreLevel(
         label: 'Critico',
         description: 'Altamente concentrato su una fonte',
-        color: Colors.red,
+        color: isDark ? AppColors.errorDark : AppColors.error,
         icon: Icons.dangerous,
       );
     }
   }
 }
 
-/// Compact version della card
 class CompactDiversificationScoreCard extends StatelessWidget {
   final int score;
   final VoidCallback? onTap;
@@ -399,14 +398,14 @@ class CompactDiversificationScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getScoreColor(score);
+    final color = _getScoreColor(score, context);
 
     return Card(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.large),
           child: Row(
             children: [
               Container(
@@ -427,7 +426,7 @@ class CompactDiversificationScoreCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.large),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +437,7 @@ class CompactDiversificationScoreCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       _getScoreLabel(score),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -450,7 +449,9 @@ class CompactDiversificationScoreCard extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right,
-                color: Colors.grey[400],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textSecondaryDark.withOpacity(0.4)
+                    : AppColors.textSecondary.withOpacity(0.4),
               ),
             ],
           ),
@@ -459,11 +460,13 @@ class CompactDiversificationScoreCard extends StatelessWidget {
     );
   }
 
-  Color _getScoreColor(int score) {
-    if (score >= 70) return Colors.green;
-    if (score >= 50) return Colors.lightGreen;
-    if (score >= 30) return Colors.orange;
-    return Colors.red;
+  Color _getScoreColor(int score, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (score >= 70) return isDark ? AppColors.successDark : AppColors.success;
+    if (score >= 50) return isDark ? AppColors.successDark.withOpacity(0.8) : AppColors.success.withOpacity(0.8);
+    if (score >= 30) return isDark ? AppColors.warningDark : AppColors.warning;
+    return isDark ? AppColors.errorDark : AppColors.error;
   }
 
   String _getScoreLabel(int score) {
@@ -474,7 +477,6 @@ class CompactDiversificationScoreCard extends StatelessWidget {
   }
 }
 
-/// Helper class per i livelli di score
 class _ScoreLevel {
   final String label;
   final String description;

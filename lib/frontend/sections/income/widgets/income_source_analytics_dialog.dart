@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../themes/app_theme.dart';
 import 'income_source_pie_chart.dart';
 import 'income_source_bar_chart.dart';
 import 'diversification_score_card.dart';
@@ -24,40 +25,31 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveUtils.isMobile(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Dialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.primary.withOpacity(0.5),
       insetPadding: EdgeInsets.zero,
       child: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.purple.withOpacity(0.02),
-              Colors.white,
-            ],
-          ),
+          color: AppColors.primary.withOpacity(0.5),
         ),
         child: Scaffold(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.primary.withOpacity(0.5),
           appBar: AppBar(
-            elevation: 2,
+            elevation: AppElevations.card,
             title: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.purple, Colors.purple.shade700],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
+                  padding: const EdgeInsets.all(AppSpacing.small),
+                  decoration: IncomeTheme.getIconContainerDecoration(
+                    isDark ? AppColors.accentDark : AppColors.accent,
                   ),
                   child: const Icon(Icons.analytics, color: Colors.white, size: 20),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.medium),
                 const Text('Analisi Fonti di Reddito'),
               ],
             ),
@@ -79,19 +71,22 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
             ],
           ),
           body: SingleChildScrollView(
-            padding: EdgeInsets.all(isMobile ? 16 : 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildPeriodHeader(context),
-                const SizedBox(height: 24),
-                if (isMobile)
-                  _buildMobileLayout(context)
-                else
-                  _buildDesktopLayout(context),
-                const SizedBox(height: 24),
-                _buildInsights(context),
-              ],
+            padding: EdgeInsets.all(isMobile ? AppSpacing.large : AppSpacing.xxxLarge),
+            child: ColoredBox(
+              color: AppColors.primary.withOpacity(0.5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPeriodHeader(context),
+                  const SizedBox(height: AppSpacing.xLarge),
+                  if (isMobile)
+                    _buildMobileLayout(context)
+                  else
+                    _buildDesktopLayout(context),
+                  const SizedBox(height: AppSpacing.xLarge),
+                  _buildInsights(context),
+                ],
+              ),
             ),
           ),
         ),
@@ -100,70 +95,70 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
   }
 
   Widget _buildPeriodHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.purple.withOpacity(0.1),
-            Colors.purple.withOpacity(0.05),
+            accentColor.withOpacity(0.1),
+            accentColor.withOpacity(0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         border: Border.all(
-          color: Colors.purple.withOpacity(0.3),
+          color: accentColor.withOpacity(0.3),
           width: 2,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.small),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
+              color: accentColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppBorderRadius.small),
             ),
             child: Icon(
               Icons.calendar_today,
-              color: Colors.purple.shade700,
+              color: accentColor,
               size: 20,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.medium),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Periodo Analizzato',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: IncomeTheme.getLabelTextStyle(context),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   period,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[900],
-                  ),
+                  style: IncomeTheme.getCardTitleStyle(context).copyWith(fontSize: 16),
                 ),
               ],
             ),
           ),
           if (startDate != null && endDate != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.medium,
+                vertical: 6,
+              ),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
+                color: accentColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(AppBorderRadius.small),
               ),
               child: Text(
                 _formatDateRange(),
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.purple.shade700,
+                  color: accentColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -181,13 +176,13 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
           sourceStats: sourceStats,
           showDetails: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xLarge),
         IncomeSourcePieChartCard(
           sourceStats: sourceStats,
           title: 'Distribuzione Fonti',
           showLegend: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xLarge),
         IncomeSourceBarChartCard(
           sourceStats: sourceStats,
           title: 'Confronto Importi',
@@ -204,7 +199,7 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
           sourceStats: sourceStats,
           showDetails: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xLarge),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -215,7 +210,7 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
                 showLegend: true,
               ),
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: AppSpacing.xLarge),
             Expanded(
               child: IncomeSourceBarChartCard(
                 sourceStats: sourceStats,
@@ -229,20 +224,22 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
   }
 
   Widget _buildInsights(BuildContext context) {
-    final insights = _generateInsights();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondary;
+    final insights = _generateInsights(context);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.05),
-            Colors.blue.withOpacity(0.08),
+            secondaryColor.withOpacity(0.05),
+            secondaryColor.withOpacity(0.08),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
+          color: secondaryColor.withOpacity(0.2),
           width: 2,
         ),
       ),
@@ -252,30 +249,22 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue, Colors.blue.shade700],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                padding: const EdgeInsets.all(AppSpacing.small),
+                decoration: IncomeTheme.getIconContainerDecoration(secondaryColor),
                 child: const Icon(
                   Icons.lightbulb,
                   color: Colors.white,
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.medium),
               Text(
                 'Suggerimenti',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[900],
-                ),
+                style: IncomeTheme.getCardTitleStyle(context),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.large),
           ...insights.map((insight) => _buildInsightItem(context, insight)),
         ],
       ),
@@ -283,12 +272,14 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
   }
 
   Widget _buildInsightItem(BuildContext context, _Insight insight) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.medium),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.medium),
         border: Border.all(
           color: insight.color.withOpacity(0.3),
           width: 1.5,
@@ -305,10 +296,10 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.small),
             decoration: BoxDecoration(
               color: insight.color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppBorderRadius.small),
             ),
             child: Icon(
               insight.icon,
@@ -316,14 +307,14 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
               size: 24,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.medium),
           Expanded(
             child: Text(
               insight.message,
               style: TextStyle(
                 fontSize: 14,
                 height: 1.5,
-                color: Colors.grey[800],
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
               ),
             ),
           ),
@@ -332,13 +323,14 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
     );
   }
 
-  List<_Insight> _generateInsights() {
+  List<_Insight> _generateInsights(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final insights = <_Insight>[];
 
     if (sourceStats.length == 1) {
       insights.add(_Insight(
         icon: Icons.warning,
-        color: Colors.red,
+        color: isDark ? AppColors.errorDark : AppColors.error,
         message:
         'Attenzione: dipendi da una sola fonte di reddito. Considera di diversificare per ridurre il rischio finanziario.',
       ));
@@ -352,7 +344,7 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
     if (dominantPercentage > 70) {
       insights.add(_Insight(
         icon: Icons.pie_chart,
-        color: Colors.orange,
+        color: isDark ? AppColors.warningDark : AppColors.warning,
         message:
         '${dominantSource.key.displayName} rappresenta ${dominantPercentage.toStringAsFixed(0)}% del tuo reddito totale. Valuta di bilanciare meglio le tue fonti.',
       ));
@@ -361,21 +353,21 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
     if (score >= 70) {
       insights.add(_Insight(
         icon: Icons.thumb_up,
-        color: Colors.green,
+        color: isDark ? AppColors.successDark : AppColors.success,
         message:
         'Ottimo score di diversificazione (${score}/100)! Mantieni questo equilibrio tra le tue fonti di reddito.',
       ));
     } else if (score >= 40) {
       insights.add(_Insight(
         icon: Icons.work,
-        color: Colors.blue,
+        color: isDark ? AppColors.secondaryDark : AppColors.secondary,
         message:
         'Score moderato ($score/100). Identifica 1-2 nuove opportunità di reddito da sviluppare nel prossimo trimestre.',
       ));
     } else {
       insights.add(_Insight(
         icon: Icons.priority_high,
-        color: Colors.red,
+        color: isDark ? AppColors.errorDark : AppColors.error,
         message:
         'Score critico ($score/100). Azione richiesta: diversifica urgentemente le tue fonti per ridurre la vulnerabilità finanziaria.',
       ));
@@ -387,7 +379,7 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
     if (!hasPassive) {
       insights.add(_Insight(
         icon: Icons.psychology,
-        color: Colors.purple,
+        color: isDark ? AppColors.accentDark : AppColors.accent,
         message:
         'Considera di sviluppare fonti di reddito passive (investimenti, affitti) per aumentare la stabilità a lungo termine.',
       ));
@@ -406,39 +398,53 @@ class IncomeSourceAnalyticsDialog extends StatelessWidget {
   }
 
   void _handleShare(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.blue.shade100),
-            const SizedBox(width: 12),
+            Icon(
+              Icons.info_outline,
+              color: (isDark ? AppColors.secondaryDark : AppColors.secondary).withOpacity(0.8),
+            ),
+            const SizedBox(width: AppSpacing.medium),
             const Expanded(
               child: Text('Funzionalità condivisione in arrivo!'),
             ),
           ],
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: isDark ? AppColors.secondaryDark : AppColors.secondary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.small),
+        ),
       ),
     );
   }
 
   void _handleExport(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.purple.shade100),
-            const SizedBox(width: 12),
+            Icon(
+              Icons.info_outline,
+              color: (isDark ? AppColors.accentDark : AppColors.accent).withOpacity(0.8),
+            ),
+            const SizedBox(width: AppSpacing.medium),
             const Expanded(
               child: Text('Funzionalità export in arrivo!'),
             ),
           ],
         ),
-        backgroundColor: Colors.purple,
+        backgroundColor: isDark ? AppColors.accentDark : AppColors.accent,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.small),
+        ),
       ),
     );
   }

@@ -3,13 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/income_bloc.dart';
 import '../../../../backend/models/income/income_source_enum.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../themes/app_theme.dart';
 import 'diversification_score_card.dart';
 import 'income_source_bar_chart.dart';
 import 'income_source_pie_chart.dart';
 
-
-/// Dashboard completa per le statistiche delle fonti di reddito
-/// Combina tutti i widget di visualizzazione in un'unica vista
 class IncomeSourceStatsDashboard extends StatelessWidget {
   final String userId;
   final DateTime? startDate;
@@ -26,16 +24,12 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        // Listener per caricare i dati quando serve
         BlocListener<IncomeBloc, IncomeState>(
-          listener: (context, state) {
-            // Eventuali side effects
-          },
+          listener: (context, state) {},
         ),
       ],
       child: BlocBuilder<IncomeBloc, IncomeState>(
         builder: (context, state) {
-          // Carica dati se non già in stato loaded
           if (state is! IncomeStatsBySourceLoaded &&
               state is! IncomeLoading) {
             context.read<IncomeBloc>().add(
@@ -76,7 +70,6 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = ResponsiveUtils.isTablet(context);
 
-    // Calcola diversification score
     return FutureBuilder<int>(
       future: _calculateDiversificationScore(context),
       builder: (context, snapshot) {
@@ -99,31 +92,24 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
       int score,
       ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.large),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           _buildHeader(context),
-          const SizedBox(height: 16),
-
-          // Diversification Score
+          const SizedBox(height: AppSpacing.large),
           DiversificationScoreCard(
             score: score,
             sourceStats: stats,
             showDetails: true,
           ),
-          const SizedBox(height: 16),
-
-          // Pie Chart
+          const SizedBox(height: AppSpacing.large),
           IncomeSourcePieChartCard(
             sourceStats: stats,
             title: 'Distribuzione Fonti',
             showLegend: true,
           ),
-          const SizedBox(height: 16),
-
-          // Bar Chart
+          const SizedBox(height: AppSpacing.large),
           IncomeSourceBarChartCard(
             sourceStats: stats,
             title: 'Confronto Importi',
@@ -141,15 +127,12 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
       int score,
       ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           _buildHeader(context),
-          const SizedBox(height: 24),
-
-          // Prima riga: Score + Pie Chart
+          const SizedBox(height: AppSpacing.xLarge),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -161,7 +144,7 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
                   showDetails: true,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.large),
               Expanded(
                 flex: 3,
                 child: IncomeSourcePieChartCard(
@@ -172,9 +155,7 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Seconda riga: Bar Chart
+          const SizedBox(height: AppSpacing.large),
           IncomeSourceBarChartCard(
             sourceStats: stats,
             title: 'Confronto Importi',
@@ -192,19 +173,15 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
       int score,
       ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppSpacing.xxxLarge),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           _buildHeader(context),
-          const SizedBox(height: 32),
-
-          // Prima riga: 3 colonne
+          const SizedBox(height: AppSpacing.xxxLarge),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Score
               Expanded(
                 flex: 2,
                 child: DiversificationScoreCard(
@@ -213,8 +190,7 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
                   showDetails: true,
                 ),
               ),
-              const SizedBox(width: 20),
-              // Pie Chart
+              const SizedBox(width: AppSpacing.large),
               Expanded(
                 flex: 3,
                 child: IncomeSourcePieChartCard(
@@ -223,8 +199,7 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
                   showLegend: true,
                 ),
               ),
-              const SizedBox(width: 20),
-              // Bar Chart
+              const SizedBox(width: AppSpacing.large),
               Expanded(
                 flex: 3,
                 child: IncomeSourceBarChartCard(
@@ -236,9 +211,7 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
               ),
             ],
           ),
-
-          // Insights aggiuntivi
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.large),
           _buildInsightsSection(context, stats, score),
         ],
       ),
@@ -265,12 +238,10 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
                     ),
                   ),
                   if (dateRange != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.small),
                     Text(
                       dateRange,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: IncomeTheme.getLabelTextStyle(context).copyWith(fontSize: 14),
                     ),
                   ],
                 ],
@@ -300,11 +271,12 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
       Map<IncomeSource, double> stats,
       int score,
       ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final insights = _generateInsights(stats, score);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.large),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -312,30 +284,28 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
               children: [
                 Icon(
                   Icons.lightbulb,
-                  color: Colors.amber,
+                  color: isDark ? AppColors.warningDark : AppColors.warning,
                   size: 24,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.medium),
                 Text(
                   'Insights & Raccomandazioni',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: IncomeTheme.getCardTitleStyle(context).copyWith(fontSize: 16),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.large),
             ...insights.map((insight) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: AppSpacing.medium),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
                     Icons.arrow_right,
-                    color: Colors.grey[600],
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.small),
                   Expanded(
                     child: Text(
                       insight,
@@ -374,59 +344,61 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
   List<String> _generateInsights(Map<IncomeSource, double> stats, int score) {
     final insights = <String>[];
     final totalAmount = stats.values.fold(0.0, (sum, amount) => sum + amount);
-    final primarySource = stats.entries
-        .reduce((a, b) => a.value > b.value ? a : b);
+    final primarySource = stats.entries.reduce((a, b) => a.value > b.value ? a : b);
     final primaryPercentage = (primarySource.value / totalAmount) * 100;
 
-    // Insight sulla fonte principale
     if (primaryPercentage > 70) {
       insights.add(
-          'Dipendi al ${primaryPercentage.toStringAsFixed(0)}% da ${primarySource.key.displayName}. '
-              'Considera di sviluppare fonti alternative.');
+        'Dipendi al ${primaryPercentage.toStringAsFixed(0)}% da ${primarySource.key.displayName}. '
+            'Considera di sviluppare fonti alternative.',
+      );
     } else if (primaryPercentage > 50) {
       insights.add(
-          '${primarySource.key.displayName} rappresenta ${primaryPercentage.toStringAsFixed(0)}% '
-              'del tuo reddito. Buon equilibrio, ma puoi migliorare.');
+        '${primarySource.key.displayName} rappresenta ${primaryPercentage.toStringAsFixed(0)}% '
+            'del tuo reddito. Buon equilibrio, ma puoi migliorare.',
+      );
     } else {
-      insights.add(
-          'Ottimo! Nessuna fonte supera il 50% del reddito totale.');
+      insights.add('Ottimo! Nessuna fonte supera il 50% del reddito totale.');
     }
 
-    // Insight sul numero di fonti
     if (stats.length <= 2) {
       insights.add(
-          'Hai solo ${stats.length} ${stats.length == 1 ? 'fonte' : 'fonti'} attiva. '
-              'Diversifica per ridurre il rischio finanziario.');
+        'Hai solo ${stats.length} ${stats.length == 1 ? 'fonte' : 'fonti'} attiva. '
+            'Diversifica per ridurre il rischio finanziario.',
+      );
     } else if (stats.length <= 4) {
       insights.add(
-          'Hai ${stats.length} fonti attive. Buon punto di partenza, '
-              'ma puoi esplorare altre opportunità.');
+        'Hai ${stats.length} fonti attive. Buon punto di partenza, '
+            'ma puoi esplorare altre opportunità.',
+      );
     } else {
       insights.add(
-          'Eccellente! Hai ${stats.length} fonti di reddito diverse, '
-              'il che riduce significativamente il rischio.');
+        'Eccellente! Hai ${stats.length} fonti di reddito diverse, '
+            'il che riduce significativamente il rischio.',
+      );
     }
 
-    // Insight sul diversification score
     if (score < 40) {
       insights.add(
-          'Score di diversificazione basso ($score/100). '
-              'Focus prioritario: sviluppare nuove fonti di reddito.');
+        'Score di diversificazione basso ($score/100). '
+            'Focus prioritario: sviluppare nuove fonti di reddito.',
+      );
     } else if (score < 70) {
       insights.add(
-          'Score moderato ($score/100). '
-              'Sei sulla strada giusta, continua a diversificare.');
+        'Score moderato ($score/100). '
+            'Sei sulla strada giusta, continua a diversificare.',
+      );
     }
 
-    // Suggerimento fonti passive
-    final hasPassiveIncome = stats.keys.any((source) =>
-    source == IncomeSource.investments ||
-        source == IncomeSource.rental);
+    final hasPassiveIncome = stats.keys.any(
+          (source) => source == IncomeSource.investments || source == IncomeSource.rental,
+    );
 
     if (!hasPassiveIncome) {
       insights.add(
-          'Considera di sviluppare fonti di reddito passive '
-              'come investimenti o affitti per aumentare la stabilità.');
+        'Considera di sviluppare fonti di reddito passive '
+            'come investimenti o affitti per aumentare la stabilità.',
+      );
     }
 
     return insights;
@@ -436,10 +408,9 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
     final bloc = context.read<IncomeBloc>();
     bloc.add(LoadDiversificationScoreEvent(userId: userId));
 
-    // Wait for the state change
     await Future.delayed(const Duration(milliseconds: 100));
 
-    return Future.value(50); // Placeholder - sarà sostituito dal vero valore
+    return Future.value(50);
   }
 
   Widget _buildLoadingState(BuildContext context) {
@@ -449,6 +420,8 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
   }
 
   Widget _buildErrorState(BuildContext context, String message) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -456,24 +429,22 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
           Icon(
             Icons.error_outline,
             size: 64,
-            color: Colors.red[300],
+            color: isDark ? AppColors.errorDark : AppColors.error,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.large),
           Text(
             'Errore nel caricamento',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.red,
+              color: isDark ? AppColors.errorDark : AppColors.error,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.small),
           Text(
             message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+            style: IncomeTheme.getLabelTextStyle(context),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xLarge),
           ElevatedButton.icon(
             onPressed: () {
               context.read<IncomeBloc>().add(
@@ -493,6 +464,8 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -500,25 +473,23 @@ class IncomeSourceStatsDashboard extends StatelessWidget {
           Icon(
             Icons.insert_chart_outlined,
             size: 80,
-            color: Colors.grey[400],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xLarge),
           Text(
             'Nessuna entrata registrata',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.grey[700],
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.medium),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxLarge),
             child: Text(
               'Aggiungi le tue entrate per visualizzare '
                   'le statistiche sulle fonti di reddito',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: IncomeTheme.getLabelTextStyle(context),
               textAlign: TextAlign.center,
             ),
           ),

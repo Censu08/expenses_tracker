@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../themes/app_theme.dart';
 import 'batch_recategorize_income_page.dart';
 import 'income_export_dialog.dart';
 
@@ -7,6 +8,8 @@ class IncomeToolsMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Strumenti Entrate'),
@@ -19,55 +22,55 @@ class IncomeToolsMenu extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               Theme.of(context).colorScheme.primary.withOpacity(0.02),
-              Colors.white,
+              isDark ? AppColors.backgroundDark : AppColors.background,
             ],
           ),
         ),
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.large),
           children: [
-            _buildSectionHeader('Export & Analisi', Icons.download),
-            const SizedBox(height: 16),
+            _buildSectionHeader(context, 'Export & Analisi', Icons.download),
+            const SizedBox(height: AppSpacing.large),
             _buildToolCard(
               context,
               icon: Icons.file_download,
-              iconColor: Colors.blue,
+              iconColor: isDark ? AppColors.secondaryDark : AppColors.secondary,
               title: 'Esporta Dati',
               description: 'Esporta le tue entrate in CSV, JSON o report testuale',
               onTap: () => _showExportDialog(context),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.medium),
             _buildToolCard(
               context,
               icon: Icons.analytics,
-              iconColor: Colors.purple,
+              iconColor: isDark ? AppColors.accentDark : AppColors.accent,
               title: 'Report Analisi Fonti',
               description: 'Genera un report completo sulla diversificazione',
               onTap: () => _showExportDialog(context, preselectedReport: true),
             ),
-            const SizedBox(height: 32),
-            _buildSectionHeader('Gestione Dati', Icons.settings),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.xxxLarge),
+            _buildSectionHeader(context, 'Gestione Dati', Icons.settings),
+            const SizedBox(height: AppSpacing.large),
             _buildToolCard(
               context,
               icon: Icons.edit_note,
-              iconColor: Colors.orange,
+              iconColor: isDark ? AppColors.warningDark : AppColors.warning,
               title: 'Re-categorizzazione Batch',
               description: 'Aggiorna la fonte di multiple entrate contemporaneamente',
               onTap: () => _navigateToRecategorize(context),
               badge: 'Consigliato',
-              badgeColor: Colors.orange,
+              badgeColor: isDark ? AppColors.warningDark : AppColors.warning,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.medium),
             _buildToolCard(
               context,
               icon: Icons.auto_fix_high,
-              iconColor: Colors.green,
+              iconColor: isDark ? AppColors.successDark : AppColors.success,
               title: 'Suggerimenti Automatici',
               description: 'Ricevi suggerimenti intelligenti per categorizzare le entrate',
               onTap: () => _showComingSoon(context),
               badge: 'Presto',
-              badgeColor: Colors.green,
+              badgeColor: isDark ? AppColors.successDark : AppColors.success,
             ),
           ],
         ),
@@ -75,28 +78,30 @@ class IncomeToolsMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppSpacing.small),
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+            color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppBorderRadius.small),
           ),
           child: Icon(
             icon,
             size: 18,
-            color: Colors.grey[700],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.small),
         Text(
           title.toUpperCase(),
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
             letterSpacing: 1,
           ),
         ),
@@ -114,52 +119,39 @@ class IncomeToolsMenu extends StatelessWidget {
         String? badge,
         Color? badgeColor,
       }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
-      elevation: 3,
+      elevation: AppElevations.card,
       shadowColor: iconColor.withOpacity(0.2),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppBorderRadius.large),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppBorderRadius.large),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white,
+                isDark ? AppColors.surfaceDark : Colors.white,
                 iconColor.withOpacity(0.03),
               ],
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(AppSpacing.large),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        iconColor,
-                        iconColor.withOpacity(0.7),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: iconColor.withOpacity(0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.all(AppSpacing.medium),
+                  decoration: IncomeTheme.getIconContainerDecoration(iconColor),
                   child: Icon(icon, color: Colors.white, size: 26),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.large),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +164,7 @@ class IncomeToolsMenu extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey[900],
+                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                                 letterSpacing: -0.3,
                               ),
                             ),
@@ -180,7 +172,7 @@ class IncomeToolsMenu extends StatelessWidget {
                           if (badge != null)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
+                                horizontal: AppSpacing.small,
                                 vertical: 5,
                               ),
                               decoration: BoxDecoration(
@@ -190,7 +182,7 @@ class IncomeToolsMenu extends StatelessWidget {
                                     (badgeColor ?? iconColor).withOpacity(0.15),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                                 border: Border.all(
                                   color: (badgeColor ?? iconColor).withOpacity(0.4),
                                   width: 1.5,
@@ -212,18 +204,18 @@ class IncomeToolsMenu extends StatelessWidget {
                         description,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                           height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.medium),
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
-                  color: Colors.grey[400],
+                  color: isDark ? AppColors.textSecondaryDark.withOpacity(0.4) : AppColors.textSecondary.withOpacity(0.4),
                 ),
               ],
             ),
@@ -250,23 +242,28 @@ class IncomeToolsMenu extends StatelessWidget {
   }
 
   void _showComingSoon(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
         ),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.small),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.secondary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppBorderRadius.small),
               ),
-              child: const Icon(Icons.info_outline, color: Colors.blue),
+              child: Icon(
+                Icons.info_outline,
+                color: isDark ? AppColors.secondaryDark : AppColors.secondary,
+              ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.medium),
             const Text('Prossimamente'),
           ],
         ),
@@ -274,16 +271,22 @@ class IncomeToolsMenu extends StatelessWidget {
           'Questa funzionalità sarà disponibile nella prossima versione!\n\n'
               'I suggerimenti automatici analizzeranno le descrizioni delle entrate '
               'e ti proporranno la fonte più appropriata.',
-          style: TextStyle(color: Colors.grey[700], height: 1.5),
+          style: TextStyle(
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            height: 1.5,
+          ),
         ),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppBorderRadius.medium),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xLarge,
+                vertical: AppSpacing.medium,
+              ),
             ),
             child: const Text('OK'),
           ),

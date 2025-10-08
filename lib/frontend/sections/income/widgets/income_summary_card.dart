@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../backend/blocs/blocs.dart';
+import '../../../themes/app_theme.dart';
 import '../pages/income_page.dart';
 import '../functions/income_page_functions.dart';
 
@@ -88,11 +89,13 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
 
   Widget _buildLoadingCard(BuildContext context) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: AppElevations.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
+      ),
       child: Container(
         height: 160,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xLarge),
         child: const Center(
           child: CircularProgressIndicator(),
         ),
@@ -101,29 +104,37 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
   }
 
   Widget _buildErrorCard(BuildContext context, IncomeError state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: AppElevations.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
+      ),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xLarge),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 48),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.error_outline,
+              color: isDark ? AppColors.errorDark : AppColors.error,
+              size: 48,
+            ),
+            const SizedBox(height: AppSpacing.large),
             Text(
               'Errore nel caricamento',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.small),
             Text(
               state.message,
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.large),
             ElevatedButton.icon(
               onPressed: () =>
                   IncomePageFunctions.loadIncomeData(context, widget.pageState),
@@ -137,6 +148,8 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
   }
 
   Widget _buildSummaryCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final successColor = isDark ? AppColors.successDark : AppColors.success;
     var filteredIncomes = List.from(widget.pageState.cachedIncomes);
 
     if (widget.pageState.selectedSource != null) {
@@ -164,24 +177,17 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Card(
-          elevation: _isHovered ? 12 : 4,
-          shadowColor: Colors.green.withOpacity(0.3),
+          elevation: _isHovered ? AppElevations.cardHover : AppElevations.card,
+          shadowColor: successColor.withOpacity(0.3),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppBorderRadius.xLarge),
           ),
           child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.08),
-                  Colors.green.withOpacity(0.18),
-                ],
-              ),
+            decoration: IncomeTheme.getSummaryCardDecoration(
+              context,
+              isHovered: _isHovered,
             ),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.xLarge),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -189,23 +195,8 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.green.shade400,
-                            Colors.green.shade600,
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
+                      padding: const EdgeInsets.all(AppSpacing.small),
+                      decoration: IncomeTheme.getIconContainerDecoration(successColor),
                       child: const Icon(
                         Icons.trending_up,
                         color: Colors.white,
@@ -214,14 +205,14 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: AppSpacing.small,
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(20),
+                        color: successColor.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(AppBorderRadius.circle),
                         border: Border.all(
-                          color: Colors.green.withOpacity(0.5),
+                          color: successColor.withOpacity(0.5),
                           width: 1.5,
                         ),
                       ),
@@ -231,13 +222,13 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                           Icon(
                             Icons.check_circle,
                             size: 14,
-                            color: Colors.green.shade800,
+                            color: successColor,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Attive',
                             style: TextStyle(
-                              color: Colors.green.shade800,
+                              color: successColor,
                               fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),
@@ -247,11 +238,10 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.large),
                 Text(
                   'Entrate Totali',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Colors.grey[800],
+                  style: IncomeTheme.getLabelTextStyle(context).copyWith(
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
@@ -264,7 +254,7 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                     Text(
                       '€',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.green.shade700,
+                        color: successColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -273,7 +263,7 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                       child: Text(
                         totalAmount.toStringAsFixed(2),
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Colors.green.shade700,
+                          color: successColor,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -1,
                         ),
@@ -282,14 +272,14 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.large),
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(AppSpacing.medium),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(12),
+                    color: (isDark ? Colors.white : Colors.white).withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(AppBorderRadius.medium),
                     border: Border.all(
-                      color: Colors.green.withOpacity(0.3),
+                      color: successColor.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
@@ -302,20 +292,15 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                           children: [
                             Text(
                               'Totale Entrate',
-                              style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[700],
+                              style: IncomeTheme.getLabelTextStyle(context).copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '$incomeCount',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                color: Colors.green.shade700,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: successColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -325,7 +310,7 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                       Container(
                         width: 1,
                         height: 35,
-                        color: Colors.green.withOpacity(0.3),
+                        color: successColor.withOpacity(0.3),
                       ),
                       Expanded(
                         child: Column(
@@ -333,20 +318,15 @@ class _IncomeSummaryCardState extends State<IncomeSummaryCard>
                           children: [
                             Text(
                               'Media',
-                              style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[700],
+                              style: IncomeTheme.getLabelTextStyle(context).copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '€ ${averageAmount.toStringAsFixed(2)}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
-                                color: Colors.green.shade700,
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: successColor,
                                 fontWeight: FontWeight.bold,
                               ),
                               overflow: TextOverflow.ellipsis,
